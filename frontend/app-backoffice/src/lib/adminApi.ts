@@ -1,0 +1,346 @@
+import { fetchAPI } from './api';
+
+export interface PendingReport {
+  id: number;
+  device_id: string;
+  categoria_id: number;
+  estado: string;
+  gravedad: string;
+  url_imagen: string;
+  h3_res_8: string;
+  h3_res_11: string;
+  h3_res_13: string;
+  lat: number;
+  lng: number;
+  creado_en: string;
+  grupo_id: number | null;
+}
+
+export interface GrupoReporte {
+  id: number;
+  codigo_obra: string;
+  estado_actual: string;
+  fecha_estimada_fin: string | null;
+  creado_por_usuario_id: number;
+  categoria_id: number | null;
+  creado_en: string;
+  total_reportes?: number;
+  preview_imagen?: string;
+  /** Cuadrilla asignada al caso (Fase 5). Null mientras nadie la asigna. */
+  cuadrilla_id?: number | null;
+  /** Solo lo devuelve GET /admin/groups/:id, no el listado. */
+  cuadrilla_nombre?: string | null;
+}
+
+export interface Actualizacion {
+  id: number;
+  grupo_id: number;
+  usuario_id: number;
+  comentario: string;
+  estado_anterior: string | null;
+  estado_nuevo: string | null;
+  url_imagen: string | null;
+  recursos_solicitados: string | null;
+  fecha_estimada_fin: string | null;
+  /** PostgreSQL devuelve columnas numeric como cadenas en algunas respuestas HTTP. */
+  lat_actualizada: number | string | null;
+  lng_actualizada: number | string | null;
+  creado_en: string;
+}
+
+export interface DashboardStats {
+  pendientes: number;
+  aceptados_hoy: number;
+  casos_activos: number;
+  reportes_activos: number;
+  dispositivos_baneados: number;
+}
+
+export interface DashboardInsight {
+  nivel: 'alerta' | 'atencion' | 'positivo';
+  mensaje: string;
+  kpi: string;
+  link?: string;
+}
+
+export interface DashboardKpis extends DashboardStats {
+  reportes_por_periodo: { periodo: string; total: number }[];
+  finalizados_por_periodo: { periodo: string; total: number }[];
+  por_categoria: { categoria_id: number; nombre: string; total: number }[];
+  casos_por_estado: { estado: string; total: number }[];
+  casos_por_estado_historico: { dia: string; estado: string; total: number }[];
+  tasa_resolucion: number;
+  rango_aplicado: { desde?: string; hasta?: string } | null;
+  insights: DashboardInsight[];
+}
+
+export interface Usuario {
+  id: number;
+  nombre: string;
+  email: string;
+  puntos: number;
+  nivel_id: number | null;
+  roles: string[];
+  creado_en: string;
+}
+
+export interface Dispositivo {
+  device_id: string;
+  is_banned: boolean;
+  motivo_ban: string | null;
+  ultimo_uso: string | null;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const MOTIVOS_DESCARTE_DIGITAL = [
+  { value: 'evidencia_insuficiente', label: 'Evidencia insuficiente' },
+  { value: 'imagen_no_corresponde', label: 'La imagen no corresponde al reporte' },
+  { value: 'contenido_duplicado_sin_aporte', label: 'Duplicado sin evidencia nueva' },
+  { value: 'contenido_inapropiado', label: 'Contenido inapropiado' },
+] as const;
+
+export type MotivoDescarteDigital = (typeof MOTIVOS_DESCARTE_DIGITAL)[number]['value'];
+
+export interface AlertaRevision {
+  tipo: 'reporte_viral' | 'espera_excesiva' | 'posible_reincidencia';
+  titulo: string;
+  detalle: string;
+  reporte_id?: number;
+  zona?: string;
+  codigo_obra?: string;
+}
+
+export interface CalidadRechazos {
+  rango_aplicado: { desde: string | null; hasta: string | null };
+  total_admisiones: number;
+  total_rechazos_campo: number;
+  proporcion_rechazo: number;
+  por_categoria: {
+    categoria_id: number | null;
+    categoria: string;
+    total: number;
+    proporcion: number;
+  }[];
+}
+
+export async function getDashboard(): Promise<DashboardStats> {
+  return fetchAPI<DashboardStats>('/admin/dashboard');
+}
+
+export async function getDashboardKpis(
+  desde?: string,
+  hasta?: string,
+  granularidad?: 'mes' | 'semana' | 'dia',
+  estado_in?: string,
+  estado_out?: string,
+  categoria_in?: string,
+  categoria_out?: string,
+): Promise<DashboardKpis> {
+  const params = new URLSearchParams();
+  if (desde) params.set('desde', desde);
+  if (hasta) params.set('hasta', hasta);
+  if (granularidad) params.set('granularidad', granularidad);
+  if (estado_in) params.set('estado_in', estado_in);
+  if (estado_out) params.set('estado_out', estado_out);
+  if (categoria_in) params.set('categoria_in', categoria_in);
+  if (categoria_out) params.set('categoria_out', categoria_out);
+  const qs = params.toString();
+  return fetchAPI<DashboardKpis>(`/admin/dashboard/kpis${qs ? `?${qs}` : ''}`);
+}
+
+export async function listPending(page = 1, limit = 20): Promise<PaginatedResponse<PendingReport>> {
+  return fetchAPI<PaginatedResponse<PendingReport>>(
+    `/admin/reports/pending?page=${page}&limit=${limit}`,
+  );
+}
+
+export async function acceptReport(
+  id: number,
+  moderador_id: number,
+  categoria_id?: number,
+  grupo_id?: number,
+  gravedad?: string,
+): Promise<{ id: number; estado: string; grupo_id: number; codigo_obra: string }> {
+  return fetchAPI(`/admin/reports/${id}/accept`, {
+    method: 'POST',
+    body: JSON.stringify({ moderador_id, categoria_id, grupo_id, gravedad }),
+  });
+}
+
+export async function listNearbyGroups(
+  h3_cell: string,
+  categoriaId?: number,
+): Promise<GrupoReporte[]> {
+  const categoriaQs = categoriaId !== undefined ? `&categoria_id=${categoriaId}` : '';
+  const res = await fetchAPI<GrupoReporte[] | { data: GrupoReporte[] }>(
+    `/admin/groups/by-cell?h3_cell=${encodeURIComponent(h3_cell)}&h3_resolution=11${categoriaQs}`,
+  );
+  return Array.isArray(res) ? res : ((res as { data: GrupoReporte[] }).data ?? []);
+}
+
+export async function rejectReport(
+  id: number,
+  motivo: MotivoDescarteDigital,
+): Promise<{ id: number; estado: string; motivo: MotivoDescarteDigital }> {
+  return fetchAPI(`/admin/reports/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ motivo }),
+  });
+}
+
+export async function listReviewAlerts(): Promise<AlertaRevision[]> {
+  return fetchAPI<AlertaRevision[]>('/admin/review/alerts');
+}
+
+export async function listReviewHistory(
+  page = 1,
+  limit = 20,
+): Promise<PaginatedResponse<PendingReport>> {
+  return fetchAPI<PaginatedResponse<PendingReport>>(
+    `/admin/review/history?page=${page}&limit=${limit}`,
+  );
+}
+
+export async function getRejectionQuality(
+  desde?: string,
+  hasta?: string,
+): Promise<CalidadRechazos> {
+  const params = new URLSearchParams();
+  if (desde) params.set('desde', desde);
+  if (hasta) params.set('hasta', hasta);
+  const query = params.toString();
+  return fetchAPI<CalidadRechazos>(`/admin/review/quality${query ? `?${query}` : ''}`);
+}
+
+export async function createGroup(report_ids: number[], creado_por_usuario_id: number) {
+  return fetchAPI<{ id: number; codigo_obra: string; reportes_agrupados: number }>(
+    '/admin/groups',
+    {
+      method: 'POST',
+      body: JSON.stringify({ report_ids, creado_por_usuario_id }),
+    },
+  );
+}
+
+export async function listGroups(
+  page = 1,
+  limit = 20,
+  filtros: {
+    estado?: string;
+    ficha?: string;
+    desde?: string;
+    hasta?: string;
+    orden?: 'recientes' | 'antiguos';
+  } = {},
+): Promise<PaginatedResponse<GrupoReporte>> {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (filtros.estado) q.set('estado', filtros.estado);
+  if (filtros.ficha) q.set('ficha', filtros.ficha);
+  if (filtros.desde) q.set('desde', filtros.desde);
+  if (filtros.hasta) q.set('hasta', filtros.hasta);
+  if (filtros.orden === 'antiguos') q.set('orden', filtros.orden);
+  return fetchAPI<PaginatedResponse<GrupoReporte>>(`/admin/groups?${q.toString()}`);
+}
+
+export async function getGroup(id: number): Promise<GrupoReporte> {
+  return fetchAPI<GrupoReporte>(`/admin/groups/${id}`);
+}
+
+export async function getCaseTimeline(id: number): Promise<Actualizacion[]> {
+  return fetchAPI<Actualizacion[]>(`/admin/groups/${id}/timeline`);
+}
+
+export interface GroupedReport {
+  id: number;
+  categoria_id: number;
+  lat: number;
+  lng: number;
+  url_imagen: string | null;
+  estado: string;
+  device_id: string;
+  creado_en: string;
+  h3_res_11: string;
+}
+
+export async function getGroupReports(grupoId: number): Promise<GroupedReport[]> {
+  return fetchAPI<GroupedReport[]>(`/admin/groups/${grupoId}/reports`);
+}
+
+export async function updateCase(
+  grupo_id: number,
+  dto: {
+    usuario_id: number;
+    comentario: string;
+    estado_nuevo?: string;
+    recursos_solicitados?: string;
+    fecha_estimada_fin?: string;
+    lat_actualizada?: number;
+    lng_actualizada?: number;
+    url_imagen?: string;
+  },
+) {
+  return fetchAPI(`/admin/groups/${grupo_id}/updates`, {
+    method: 'POST',
+    body: JSON.stringify(dto),
+  });
+}
+
+export async function listReportesByGrupo(grupo_id: number, limit = 6): Promise<PendingReport[]> {
+  const res = await fetchAPI<PaginatedResponse<PendingReport>>(
+    `/reportes?grupo_id=${grupo_id}&limit=${limit}`,
+  );
+  return res.data ?? [];
+}
+
+export async function banDevice(device_id: string, motivo: string) {
+  return fetchAPI('/admin/devices/ban', {
+    method: 'POST',
+    body: JSON.stringify({ device_id, motivo }),
+  });
+}
+
+export async function unbanDevice(device_id: string) {
+  return fetchAPI('/admin/devices/unban', {
+    method: 'POST',
+    body: JSON.stringify({ device_id }),
+  });
+}
+
+export async function listNearbyReports(
+  lat: number,
+  lng: number,
+  radius = 100,
+  categoriaId?: number,
+): Promise<PendingReport[]> {
+  const categoriaQs = categoriaId !== undefined ? `&categoria_id=${categoriaId}` : '';
+  return fetchAPI<PendingReport[]>(
+    `/admin/reports/nearby?lat=${lat}&lng=${lng}&radius=${radius}${categoriaQs}`,
+  );
+}
+
+export async function listUsers(
+  page = 1,
+  limit = 20,
+  q?: string,
+): Promise<PaginatedResponse<Usuario>> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (q) params.set('q', q);
+  return fetchAPI<PaginatedResponse<Usuario>>(`/auth/users?${params.toString()}`);
+}
+
+export async function listDevices(
+  page = 1,
+  limit = 20,
+  bannedOnly = false,
+): Promise<PaginatedResponse<Dispositivo>> {
+  const banned = bannedOnly ? '&banned_only=true' : '';
+  return fetchAPI<PaginatedResponse<Dispositivo>>(
+    `/admin/devices?page=${page}&limit=${limit}${banned}`,
+  );
+}

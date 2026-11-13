@@ -1,0 +1,47 @@
+name: ojo-camba-infra
+
+networks:
+  ojo-camba-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  seaweedfs_data:
+
+services:
+
+  postgres:
+    build:
+      context: ../..
+      dockerfile: docker/infra/Dockerfile.postgres-h3
+    environment:
+      POSTGRES_DB: ojocamba
+      POSTGRES_USER: ojocamba
+      POSTGRES_PASSWORD: ojocamba_secret
+    volumes:
+      - ../../docker/infra/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ojo-camba-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ojocamba"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    command: server -s3 -filer -dir /data
+    volumes:
+      - seaweedfs_data:/data
+    ports:
+      - "8333:8333"
+    networks:
+      - ojo-camba-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8333/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

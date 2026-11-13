@@ -1,0 +1,85 @@
+import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { TCP_PATTERNS } from '@ojo-camba/common';
+import { AuthService } from './auth.service';
+import { AplicarSolicitudTiDto, GestionAccesosService } from './gestion-accesos.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+
+@Controller()
+export class AuthController {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly gestionAccesosService: GestionAccesosService,
+  ) {}
+
+  @MessagePattern(TCP_PATTERNS.AUTH.PING)
+  ping() {
+    return { status: 'ok', service: 'ms-auth' };
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.REGISTER)
+  register(@Payload() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.LOGIN)
+  login(@Payload() dto: LoginDto) {
+    return this.authService.login(dto);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.REFRESH)
+  refreshToken(@Payload() dto: { refresh_token: string }) {
+    return this.authService.refresh(dto.refresh_token);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.LOGOUT)
+  logout(@Payload() dto: { user_id: number }) {
+    return this.authService.logout(dto.user_id);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.VALIDATE_TOKEN)
+  validateToken(@Payload() dto: { token: string }) {
+    return this.authService.validateToken(dto.token);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.GET_PROFILE)
+  getProfile(@Payload() dto: { user_id: number }) {
+    return this.authService.getProfile(dto.user_id);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.ADD_POINTS)
+  addPoints(@Payload() dto: { user_id: number; puntos: number }) {
+    return this.authService.addPoints(dto.user_id, dto.puntos);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.UPDATE_LEVEL)
+  updateLevel(@Payload() dto: { user_id: number; nivel_id: number }) {
+    return this.authService.updateLevel(dto.user_id, dto.nivel_id);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.LIST_USERS)
+  listUsers(@Payload() dto: { page?: number; limit?: number; q?: string }) {
+    return this.authService.listUsers(dto.page, dto.limit, dto.q);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.LIST_CIUDADANOS)
+  listCiudadanos(@Payload() dto: { page?: number; limit?: number; q?: string }) {
+    return this.gestionAccesosService.listCiudadanos(dto.page, dto.limit, dto.q);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.LIST_ROLES_GESTIONABLES)
+  listRolesGestionables() {
+    return this.gestionAccesosService.listRolesGestionables();
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.APLICAR_SOLICITUD_TI)
+  aplicarSolicitudTi(@Payload() dto: AplicarSolicitudTiDto) {
+    return this.gestionAccesosService.aplicarSolicitud(dto);
+  }
+
+  @MessagePattern(TCP_PATTERNS.AUTH.LIST_SOLICITUDES_TI)
+  listSolicitudesTi(@Payload() dto: { page?: number; limit?: number }) {
+    return this.gestionAccesosService.listSolicitudes(dto.page, dto.limit);
+  }
+}

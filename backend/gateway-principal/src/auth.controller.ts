@@ -1,7 +1,10 @@
-import { Controller, Post, Get, Body, Param, Inject } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Inject, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { TCP_PATTERNS } from '@ojo-camba/common';
 import { sendRpc } from './rpc.helper';
+import { exigirPropioOGestion, RolesGuard, type TokenValidation } from './roles.guard';
+
+type AuthenticatedRequest = { user: TokenValidation };
 
 @Controller('auth')
 export class AuthController {
@@ -22,9 +25,11 @@ export class AuthController {
     return sendRpc(this.client.send(TCP_PATTERNS.AUTH.REFRESH, dto));
   }
 
+  /** Cierra la sesión del dueño del token; el cuerpo no decide a quién. */
   @Post('logout')
-  logout(@Body() dto: { user_id: number }) {
-    return sendRpc(this.client.send(TCP_PATTERNS.AUTH.LOGOUT, dto));
+  @UseGuards(RolesGuard)
+  logout(@Req() request: AuthenticatedRequest) {
+    return sendRpc(this.client.send(TCP_PATTERNS.AUTH.LOGOUT, { user_id: request.user.user_id }));
   }
 
   @Post('validate')
@@ -33,7 +38,10 @@ export class AuthController {
   }
 
   @Get('profile/:id')
-  profile(@Param('id') id: string) {
-    return sendRpc(this.client.send(TCP_PATTERNS.AUTH.GET_PROFILE, { user_id: parseInt(id, 10) }));
+  @UseGuards(RolesGuard)
+  profile(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    const userId = parseInt(id, 10);
+    exigirPropioOGestion(request.user, userId);
+    return sendRpc(this.client.send(TCP_PATTERNS.AUTH.GET_PROFILE, { user_id: userId }));
   }
 }

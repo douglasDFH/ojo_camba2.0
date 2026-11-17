@@ -1,6 +1,7 @@
 import {
   Injectable,
   BadRequestException,
+  ForbiddenException,
   NotFoundException,
   Logger,
   OnModuleInit,
@@ -79,6 +80,15 @@ export class RegisterService implements OnModuleInit {
   }
 
   async create(dto: CreateReporteDto) {
+    // Un dispositivo baneado por spam no puede seguir reportando. Se revisa
+    // antes de subir la foto para no gastar almacenamiento en un rechazo.
+    const dispositivo = await this.dispositivoRepo.findOne({
+      where: { device_id: dto.device_id },
+    });
+    if (dispositivo?.is_banned) {
+      throw new ForbiddenException('Este dispositivo está bloqueado y no puede enviar reportes.');
+    }
+
     const categoria = await this.categoriaRepo.findOne({ where: { id: dto.categoria_id } });
     if (!categoria) {
       throw new BadRequestException(`Categoria ${dto.categoria_id} no existe`);

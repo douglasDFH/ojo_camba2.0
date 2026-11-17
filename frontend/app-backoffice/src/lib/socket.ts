@@ -1,4 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
+import { getToken } from './auth';
 
 // socket.io comparte el mismo host/puerto que la API HTTP (gateway-principal).
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
@@ -10,6 +11,8 @@ export function getSocket(): Socket {
   if (!socket) {
     socket = io(API_URL, {
       transports: ['websocket'],
+      // Función: en cada (re)conexión se manda el token vigente, no el del arranque.
+      auth: (cb) => cb({ token: getToken() }),
       autoConnect: true,
       reconnection: true,
     });

@@ -14,7 +14,7 @@ import { GestionAccesosController } from './gestion-accesos.controller';
 import { PrediccionController } from './prediccion.controller';
 import { EventsModule } from './events/events.module';
 import { AiConfigurationGuard, BackofficeGuard } from './ai-access.guard';
-import { RolesGuard } from './roles.guard';
+import { OptionalAuthGuard, RolesGuard } from './roles.guard';
 
 @Module({
   imports: [
@@ -76,6 +76,6 @@ import { RolesGuard } from './roles.guard';
     GestionAccesosController,
     PrediccionController,
   ],
-  providers: [BackofficeGuard, AiConfigurationGuard, RolesGuard],
+  providers: [BackofficeGuard, AiConfigurationGuard, RolesGuard, OptionalAuthGuard],
 })
 export class AppModule {}

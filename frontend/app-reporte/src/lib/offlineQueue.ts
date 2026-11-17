@@ -1,3 +1,4 @@
+import { authHeaders } from './api';
 const QUEUE_KEY = 'ojo_camba_offline_queue';
 
 interface QueuedReporte {
@@ -46,7 +47,9 @@ export async function flush(baseUrl: string) {
     try {
       const res = await fetch(`${baseUrl}/reportes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // El autor sale del token vigente al enviar; el usuario_id guardado en la
+        // cola ya no se usa (el gateway lo ignora).
+        headers: authHeaders(),
         body: JSON.stringify(queue[i]),
       });
       if (res.ok) {

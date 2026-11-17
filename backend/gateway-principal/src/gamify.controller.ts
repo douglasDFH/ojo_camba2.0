@@ -1,21 +1,24 @@
-import { Controller, Post, Get, Body, Param, Inject } from '@nestjs/common';
+import { Controller, Get, Param, Inject, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { TCP_PATTERNS } from '@ojo-camba/common';
+import { exigirPropioOGestion, RolesGuard, type TokenValidation } from './roles.guard';
 
+/**
+ * Lectura de puntos y niveles. Otorgar puntos NO se expone por HTTP: ms-admin
+ * los otorga por TCP al aceptar un reporte, con idempotencia por reporte.
+ */
 @Controller('gamify')
 export class GamifyController {
   constructor(@Inject('MS_GAMIFY') private readonly client: ClientProxy) {}
 
-  @Post('award')
-  award(@Body() dto: { user_id: number; puntos: number }) {
-    return firstValueFrom(this.client.send(TCP_PATTERNS.GAMIFY.AWARD_POINTS, dto));
-  }
-
   @Get('stats/:id')
-  stats(@Param('id') id: string) {
+  @UseGuards(RolesGuard)
+  stats(@Req() request: { user: TokenValidation }, @Param('id') id: string) {
+    const userId = parseInt(id, 10);
+    exigirPropioOGestion(request.user, userId);
     return firstValueFrom(
-      this.client.send(TCP_PATTERNS.GAMIFY.GET_USER_STATS, { user_id: parseInt(id, 10) }),
+      this.client.send(TCP_PATTERNS.GAMIFY.GET_USER_STATS, { user_id: userId }),
     );
   }
 

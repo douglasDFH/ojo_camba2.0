@@ -36,10 +36,7 @@ export default function PerfilPage() {
 
   const handleLogout = async () => {
     if (user) {
-      await fetchAPI('/auth/logout', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: user.id }),
-      }).catch(() => {});
+      await fetchAPI('/auth/logout', { method: 'POST' }).catch(() => {});
     }
     logout();
     navigate('/');

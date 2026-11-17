@@ -1,5 +1,6 @@
 import {
   InternalServerErrorException,
+  ForbiddenException,
   ConflictException,
   UnauthorizedException,
   NotFoundException,
@@ -22,6 +23,7 @@ export async function sendRpc<T>(source: Observable<T>): Promise<T> {
     const msg = result.message ?? 'Error interno';
     if (msg.includes('ya esta registrado') || msg.includes('ya existe'))
       throw new ConflictException(msg);
+    if (msg.includes('bloqueado')) throw new ForbiddenException(msg);
     if (
       msg.includes('Credenciales invalidas') ||
       msg.includes('invalido') ||

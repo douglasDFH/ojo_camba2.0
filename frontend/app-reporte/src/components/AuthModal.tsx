@@ -30,7 +30,8 @@ export default function AuthModal({ open, onClose }: { open: boolean; onClose: (
       loginStore(data);
       await fetchAPI('/reportes/vincular', {
         method: 'POST',
-        body: JSON.stringify({ user_id: data.user.id, device_id: getDeviceId() }),
+        // El usuario sale del token recién guardado; solo se manda el dispositivo.
+        body: JSON.stringify({ device_id: getDeviceId() }),
       }).catch(() => {});
       onClose();
     } catch (err) {

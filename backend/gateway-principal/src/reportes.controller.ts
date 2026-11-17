@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Body, Param, Inject, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Inject,
+  Query,
+  Res,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { OptionalAuthGuard, RolesGuard, type TokenValidation } from './roles.guard';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { TCP_PATTERNS } from '@ojo-camba/common';
@@ -14,7 +26,9 @@ export class ReportesController {
   ) {}
 
   @Post()
+  @UseGuards(OptionalAuthGuard)
   async create(
+    @Req() request: { user?: TokenValidation },
     @Body()
     dto: {
       device_id: string;
@@ -23,10 +37,22 @@ export class ReportesController {
       categoria_id: number;
       gravedad?: string;
       imagen_base64?: string;
-      usuario_id?: number;
     },
   ) {
-    const reporte = await sendRpc(this.client.send(TCP_PATTERNS.REGISTER.CREATE_REPORT, dto));
+    // El autor sale del token (si el ciudadano inició sesión), nunca del cuerpo:
+    // así nadie puede atribuir reportes, ni sus puntos, a una cuenta ajena.
+    const { device_id, lat, lng, categoria_id, gravedad, imagen_base64 } = dto;
+    const reporte = await sendRpc(
+      this.client.send(TCP_PATTERNS.REGISTER.CREATE_REPORT, {
+        device_id,
+        lat,
+        lng,
+        categoria_id,
+        gravedad,
+        imagen_base64,
+        usuario_id: request.user?.user_id ?? undefined,
+      }),
+    );
     // Tiempo real: avisar al backoffice del reporte nuevo (CU moderación).
     this.events.emitNewReport(reporte);
     return reporte;
@@ -94,8 +120,14 @@ export class ReportesController {
   }
 
   @Post('vincular')
-  vincular(@Body() dto: { usuario_id: number; device_id: string }) {
-    return sendRpc(this.client.send(TCP_PATTERNS.REGISTER.VINCULAR_DEVICE, dto));
+  @UseGuards(RolesGuard)
+  vincular(@Req() request: { user: TokenValidation }, @Body() dto: { device_id: string }) {
+    return sendRpc(
+      this.client.send(TCP_PATTERNS.REGISTER.VINCULAR_DEVICE, {
+        usuario_id: request.user.user_id,
+        device_id: dto.device_id,
+      }),
+    );
   }
 
   @Get(':id/imagen')

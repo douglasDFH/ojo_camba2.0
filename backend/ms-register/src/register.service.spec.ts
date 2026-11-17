@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as h3 from 'h3-js';
 import { Reporte, Dispositivo, Categoria } from '@ojo-camba/common';
@@ -71,6 +71,7 @@ describe('RegisterService.create', () => {
       findOne: jest.fn().mockResolvedValue({ id: 1, nombre: 'bache' }),
     };
     dispositivoRepo = {
+      findOne: jest.fn().mockResolvedValue(null),
       upsert: jest.fn().mockResolvedValue(undefined),
     };
 
@@ -87,6 +88,35 @@ describe('RegisterService.create', () => {
   });
 
   afterEach(() => jest.restoreAllMocks());
+
+  it('rechaza reportes de un dispositivo baneado sin subir la foto', async () => {
+    dispositivoRepo.findOne.mockResolvedValue({ device_id: 'd1', is_banned: true });
+    const s3Send = jest.spyOn(S3Client.prototype, 'send');
+    await expect(
+      service.create({
+        device_id: 'd1',
+        lat: -17.78,
+        lng: -63.18,
+        categoria_id: 1,
+        imagen_base64: IMG,
+      }),
+    ).rejects.toThrow(ForbiddenException);
+    expect(s3Send).not.toHaveBeenCalled();
+    expect(reporteRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('acepta reportes de un dispositivo conocido que no está baneado', async () => {
+    dispositivoRepo.findOne.mockResolvedValue({ device_id: 'd1', is_banned: false });
+    await expect(
+      service.create({
+        device_id: 'd1',
+        lat: -17.78,
+        lng: -63.18,
+        categoria_id: 1,
+        imagen_base64: IMG,
+      }),
+    ).resolves.toEqual(expect.objectContaining({ estado: 'Reportado' }));
+  });
 
   it('rechaza categoria inexistente', async () => {
     categoriaRepo.findOne.mockResolvedValue(null);

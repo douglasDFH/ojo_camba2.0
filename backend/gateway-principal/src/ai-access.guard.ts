@@ -37,15 +37,3 @@ export class BackofficeGuard implements CanActivate {
     return true;
   }
 }
-
-@Injectable()
-export class AiConfigurationGuard extends BackofficeGuard {
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    await super.canActivate(context);
-    const request = context.switchToHttp().getRequest<{ user?: TokenValidation }>();
-    if (!request.user || !tieneAlgunRol(request.user.roles, [ROLES.ENCARGADO_IT])) {
-      throw new ForbiddenException('Solo administradores pueden cambiar proveedores de IA.');
-    }
-    return true;
-  }
-}

@@ -10,14 +10,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { TCP_PATTERNS, type AiProviderName } from '@ojo-camba/common';
+import { ROLES, TCP_PATTERNS, type AiProviderName } from '@ojo-camba/common';
 import { sendRpc } from './rpc.helper';
-import { AiConfigurationGuard } from './ai-access.guard';
+import { RequireRoles, RolesGuard } from './roles.guard';
 
 const PROVIDERS: AiProviderName[] = ['groq', 'gemini', 'deepseek', 'openai'];
 
+/**
+ * Solo el encargado de IT. Antes el guard exigía además el rol backoffice, así
+ * que una cuenta de IT sin ese rol recibía 403 en su propia pantalla.
+ */
 @Controller('config/ia')
-@UseGuards(AiConfigurationGuard)
+@UseGuards(RolesGuard)
+@RequireRoles(ROLES.ENCARGADO_IT)
 export class AiConfigurationController {
   constructor(@Inject('MS_IA') private readonly client: ClientProxy) {}
 

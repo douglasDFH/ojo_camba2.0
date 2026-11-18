@@ -1,8 +1,8 @@
 import { Controller, Post, Body, Param, Inject, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { TCP_PATTERNS } from '@ojo-camba/common';
+import { ROLES, TCP_PATTERNS } from '@ojo-camba/common';
 import { sendRpc } from './rpc.helper';
-import { BackofficeGuard } from './ai-access.guard';
+import { RequireRoles, RolesGuard } from './roles.guard';
 
 export interface InferirTriajeDto {
   categoria_id: number;
@@ -13,17 +13,25 @@ export interface InferirTriajeDto {
   temporada_forzada?: string;
 }
 
+/**
+ * Cada ruta pide el rol de la pantalla que la usa: triaje y análisis de foto
+ * los usa la bandeja de moderación; la recomendación de cuadrilla, el
+ * coordinador en el detalle del caso (antes exigía backoffice y el coordinador
+ * recibía 403).
+ */
 @Controller('ia')
-@UseGuards(BackofficeGuard)
+@UseGuards(RolesGuard)
 export class IaController {
   constructor(@Inject('MS_IA') private readonly client: ClientProxy) {}
 
   @Post('triaje')
+  @RequireRoles(ROLES.BACKOFFICE)
   inferirTriaje(@Body() dto: InferirTriajeDto) {
     return sendRpc(this.client.send(TCP_PATTERNS.IA.INFERIR_TRIAJE, dto));
   }
 
   @Post('casos/:id/recomendar-cuadrilla')
+  @RequireRoles(ROLES.COORDINADOR_OPERATIVO)
   recomendarCuadrilla(@Param('id') id: string) {
     return sendRpc(
       this.client.send(TCP_PATTERNS.IA.RECOMENDAR_CUADRILLA, { grupo_id: parseInt(id, 10) }),
@@ -31,6 +39,7 @@ export class IaController {
   }
 
   @Post('reportes/:id/sugerencia-hechos')
+  @RequireRoles(ROLES.BACKOFFICE)
   sugerirHechos(
     @Param('id') id: string,
     @Body() dto: { nearby_report_ids?: number[]; nearby_group_ids?: number[] },

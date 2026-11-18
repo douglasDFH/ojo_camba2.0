@@ -1,8 +1,13 @@
-import { Controller, Post, Get, Body, Param, Inject, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Inject, Query, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { TCP_PATTERNS } from '@ojo-camba/common';
+import { ROLES, TCP_PATTERNS } from '@ojo-camba/common';
 import { sendRpc } from './rpc.helper';
-import { exigirPropioOGestion, RolesGuard, type TokenValidation } from './roles.guard';
+import {
+  exigirPropioOGestion,
+  RequireRoles,
+  RolesGuard,
+  type TokenValidation,
+} from './roles.guard';
 
 type AuthenticatedRequest = { user: TokenValidation };
 
@@ -35,6 +40,20 @@ export class AuthController {
   @Post('validate')
   validate(@Body() dto: { token: string }) {
     return sendRpc(this.client.send(TCP_PATTERNS.AUTH.VALIDATE_TOKEN, dto));
+  }
+
+  /** Listado de cuentas para la página Usuarios del Back Office (encargado de IT). */
+  @Get('users')
+  @UseGuards(RolesGuard)
+  @RequireRoles(ROLES.ENCARGADO_IT)
+  listUsers(@Query('page') page?: string, @Query('limit') limit?: string, @Query('q') q?: string) {
+    return sendRpc(
+      this.client.send(TCP_PATTERNS.AUTH.LIST_USERS, {
+        page: page ? Math.max(1, parseInt(page, 10) || 1) : undefined,
+        limit: limit ? Math.min(100, Math.max(1, parseInt(limit, 10) || 20)) : undefined,
+        q: q?.trim() || undefined,
+      }),
+    );
   }
 
   @Get('profile/:id')

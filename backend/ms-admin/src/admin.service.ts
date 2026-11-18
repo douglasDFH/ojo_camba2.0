@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientProxy } from '@nestjs/microservices';
-import { In, Repository, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, In, Repository, SelectQueryBuilder } from 'typeorm';
 import * as crypto from 'crypto';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import {
@@ -67,6 +67,18 @@ const ESTADOS_ACTIVOS = [
   EstadoCaso.Reencolado,
   EstadoCaso.EnTrabajo,
 ];
+
+/**
+ * Código de obra O-AA-NNNNNNN. El número sale de la secuencia codigo_obra_seq
+ * (migración SecuenciaCodigoObra): es único aunque dos moderadores acepten a
+ * la vez, a diferencia de contar filas, que repetía números.
+ */
+export async function generarCodigoObra(manager: EntityManager, fecha = new Date()) {
+  const [{ numero }] = (await manager.query(
+    `SELECT nextval('codigo_obra_seq')::text AS numero`,
+  )) as { numero: string }[];
+  return `O-${String(fecha.getFullYear()).slice(-2)}-${numero.padStart(7, '0')}`;
+}
 
 function estadoReporteDesdeCaso(estado: EstadoCaso): EstadoReporte {
   if (estado === EstadoCaso.Finalizado) return EstadoReporte.Finalizado;
@@ -228,9 +240,7 @@ export class AdminService {
         };
       }
 
-      const year = new Date().getFullYear();
-      const count = (await manager.count(GrupoReporte)) + 1;
-      const codigoObra = `O-${String(year).slice(-2)}-${String(count).padStart(7, '0')}`;
+      const codigoObra = await generarCodigoObra(manager);
 
       const grupo = await manager.save(
         manager.create(GrupoReporte, {
@@ -441,24 +451,26 @@ export class AdminService {
     }
     const categoriaFinal = dto.categoria_id ?? reportes[0].categoria_id;
 
-    const year = new Date().getFullYear();
-    const count = (await this.grupoRepo.count()) + 1;
-    const codigoObra = `O-${String(year).slice(-2)}-${String(count).padStart(7, '0')}`;
-
-    const grupo = this.grupoRepo.create({
-      codigo_obra: codigoObra,
-      estado_actual: EstadoCaso.PendienteAsignacion,
-      creado_por_usuario_id: dto.creado_por_usuario_id,
-      categoria_id: categoriaFinal,
-    });
-    await this.grupoRepo.save(grupo);
-
-    await this.reporteRepo.update(dto.report_ids, {
-      grupo_id: grupo.id,
-      estado: EstadoReporte.Aceptado,
-      categoria_id: categoriaFinal,
-      admitido_por_usuario_id: dto.creado_por_usuario_id,
-      admitido_en: new Date(),
+    // Caso y reportes se escriben juntos: si falla la vinculación no queda un
+    // caso vacío.
+    const { grupo, codigoObra } = await this.grupoRepo.manager.transaction(async (manager) => {
+      const codigo = await generarCodigoObra(manager);
+      const nuevo = await manager.save(
+        manager.create(GrupoReporte, {
+          codigo_obra: codigo,
+          estado_actual: EstadoCaso.PendienteAsignacion,
+          creado_por_usuario_id: dto.creado_por_usuario_id,
+          categoria_id: categoriaFinal,
+        }),
+      );
+      await manager.update(Reporte, dto.report_ids, {
+        grupo_id: nuevo.id,
+        estado: EstadoReporte.Aceptado,
+        categoria_id: categoriaFinal,
+        admitido_por_usuario_id: dto.creado_por_usuario_id,
+        admitido_en: new Date(),
+      });
+      return { grupo: nuevo, codigoObra: codigo };
     });
 
     this.logger.log(`Caso de Obra creado: ${codigoObra} con ${dto.report_ids.length} reportes`);
@@ -529,32 +541,38 @@ export class AdminService {
       }
     }
 
-    const actualizacion = this.actualizacionRepo.create({
-      grupo_id: dto.grupo_id,
-      usuario_id: dto.usuario_id,
-      comentario: dto.comentario,
-      estado_anterior: dto.estado_nuevo ? grupo.estado_actual : null,
-      estado_nuevo: dto.estado_nuevo ?? null,
-      recursos_solicitados: dto.recursos_solicitados ?? null,
-      fecha_estimada_fin: dto.fecha_estimada_fin ?? null,
-      lat_actualizada: dto.lat_actualizada ?? null,
-      lng_actualizada: dto.lng_actualizada ?? null,
-      url_imagen: urlImagen,
-    });
-    await this.actualizacionRepo.save(actualizacion);
-
-    if (dto.estado_nuevo) {
-      grupo.estado_actual = dto.estado_nuevo;
-      if (dto.fecha_estimada_fin) {
-        grupo.fecha_estimada_fin = dto.fecha_estimada_fin;
-      }
-      await this.grupoRepo.save(grupo);
-
-      await this.reporteRepo.update(
-        { grupo_id: dto.grupo_id },
-        { estado: estadoReporteDesdeCaso(dto.estado_nuevo as EstadoCaso) },
+    // Bitácora, estado del caso y estado de sus reportes en una sola
+    // transacción: un fallo a mitad no deja un caso con historia incoherente.
+    const actualizacion = await this.grupoRepo.manager.transaction(async (manager) => {
+      const nueva = await manager.save(
+        manager.create(ActualizacionCaso, {
+          grupo_id: dto.grupo_id,
+          usuario_id: dto.usuario_id,
+          comentario: dto.comentario,
+          estado_anterior: dto.estado_nuevo ? grupo.estado_actual : null,
+          estado_nuevo: dto.estado_nuevo ?? null,
+          recursos_solicitados: dto.recursos_solicitados ?? null,
+          fecha_estimada_fin: dto.fecha_estimada_fin ?? null,
+          lat_actualizada: dto.lat_actualizada ?? null,
+          lng_actualizada: dto.lng_actualizada ?? null,
+          url_imagen: urlImagen,
+        }),
       );
-    }
+
+      if (dto.estado_nuevo) {
+        grupo.estado_actual = dto.estado_nuevo;
+        if (dto.fecha_estimada_fin) {
+          grupo.fecha_estimada_fin = dto.fecha_estimada_fin;
+        }
+        await manager.save(grupo);
+        await manager.update(
+          Reporte,
+          { grupo_id: dto.grupo_id },
+          { estado: estadoReporteDesdeCaso(dto.estado_nuevo as EstadoCaso) },
+        );
+      }
+      return nueva;
+    });
 
     return {
       id: actualizacion.id,

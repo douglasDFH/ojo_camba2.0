@@ -1,0 +1,360 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" modified="2026-11-18T01:15:40Z" agent="Copilot" version="24.7.17" type="device">
+  <diagram id="ojo-camba-casos-1" name="01 Ciudadan?a y moderaci?n">
+    <mxGraphModel dx="1800" dy="1130" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1130" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="system-boundary" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#17324D;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="25" width="1500" height="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="page-title" value="Ojo Camba ? Ciudadan?a y moderaci?n" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=22;fontStyle=1;fontColor=#17324D;" vertex="1" parent="1">
+          <mxGeometry x="285" y="35" width="1000" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="page-note" value="Perfiles autenticados conservan el rol ciudadano. Las asociaciones representan permisos/acciones del actor." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontColor=#526575;" vertex="1" parent="1">
+          <mxGeometry x="285" y="70" width="1400" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="section-1" value="CIUDADAN?A" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;fontColor=#9A6700;" vertex="1" parent="1">
+          <mxGeometry x="285" y="95" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="section-2" value="MODERACI?N Y BACKOFFICE" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;fontColor=#175A8A;" vertex="1" parent="1">
+          <mxGeometry x="285" y="540" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-citizen" value="Ciudadano&lt;br&gt;(an?nimo o registrado)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#9A6700;fillColor=#FFF8E1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="180" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-registered" value="Ciudadano&lt;br&gt;registrado" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#9A6700;fillColor=#FFF8E1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="390" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-backoffice" value="Moderador&lt;br&gt;/ Backoffice" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#175A8A;fillColor=#EAF4FB;" vertex="1" parent="1">
+          <mxGeometry x="30" y="800" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-01" value="&lt;b&gt;CU-01&lt;/b&gt;&lt;br&gt;Visualizar el mapa de calor de problemas urbanos." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="125" width="410" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-02" value="&lt;b&gt;CU-02&lt;/b&gt;&lt;br&gt;Registrar un reporte con foto, categor?a, GPS y DeviceID." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="120" width="450" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-04" value="&lt;b&gt;CU-04&lt;/b&gt;&lt;br&gt;Consultar la bit?cora p?blica del reporte o Caso de Obra." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="120" width="460" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-05" value="&lt;b&gt;CU-05&lt;/b&gt;&lt;br&gt;Compartir el estado mediante enlace o sticker din?mico." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="500" y="250" width="470" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-03" value="&lt;b&gt;CU-03&lt;/b&gt;&lt;br&gt;Crear cuenta y vincular el historial previo mediante DeviceID." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="250" width="510" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-16" value="&lt;b&gt;CU-16&lt;/b&gt;&lt;br&gt;Iniciar/cerrar sesi?n y renovar la sesi?n autenticada." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="395" width="410" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-17" value="&lt;b&gt;CU-17&lt;/b&gt;&lt;br&gt;Consultar el perfil y los reportes propios." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="390" width="450" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-18" value="&lt;b&gt;CU-18&lt;/b&gt;&lt;br&gt;Consultar puntos, nivel y progreso de gamificaci?n." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#D6A323;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="390" width="460" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-06" value="&lt;b&gt;CU-06&lt;/b&gt;&lt;br&gt;Revisar la bandeja de reportes pendientes." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="580" width="410" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-07" value="&lt;b&gt;CU-07&lt;/b&gt;&lt;br&gt;Validar, aceptar o rechazar. Al aceptar, crear/asignar Caso de Obra y confirmar o corregir categor?a." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="565" width="470" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-08" value="&lt;b&gt;CU-08&lt;/b&gt;&lt;br&gt;Agrupar reportes adicionales en un Caso de Obra existente." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="580" width="430" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-09" value="&lt;b&gt;CU-09&lt;/b&gt;&lt;br&gt;Bloquear o desbloquear el DeviceID de un dispositivo." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="735" width="410" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-30" value="&lt;b&gt;CU-30&lt;/b&gt;&lt;br&gt;Consultar alertas, historial y calidad de la revisi?n." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="735" width="470" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-31" value="&lt;b&gt;CU-31&lt;/b&gt;&lt;br&gt;Consultar el asistente de IA para apoyo en Backoffice." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="735" width="430" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-32" value="&lt;b&gt;CU-32&lt;/b&gt;&lt;br&gt;Solicitar apoyo de IA para triaje, sugerencias de hechos y recomendaci?n de cuadrilla." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="890" width="500" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="gen-actor-registered" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526575;endArrow=block;endFill=0;endSize=14;" edge="1" parent="1" source="actor-registered" target="actor-citizen">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-citizen-CU-01" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-citizen" target="CU-01">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-citizen-CU-02" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-citizen" target="CU-02">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-citizen-CU-04" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-citizen" target="CU-04">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-citizen-CU-05" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-citizen" target="CU-05">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-registered-CU-03" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-registered" target="CU-03">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-registered-CU-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-registered" target="CU-16">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-registered-CU-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-registered" target="CU-17">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-registered-CU-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-registered" target="CU-18">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-backoffice-CU-06" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-backoffice" target="CU-06">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-backoffice-CU-07" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-backoffice" target="CU-07">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-backoffice-CU-08" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-backoffice" target="CU-08">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-backoffice-CU-09" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-backoffice" target="CU-09">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-backoffice-CU-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-backoffice" target="CU-30">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-backoffice-CU-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-backoffice" target="CU-31">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-backoffice-CU-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-backoffice" target="CU-32">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ojo-camba-casos-2" name="02 Operaci?n municipal">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="system-boundary" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#17324D;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="25" width="1500" height="1150" as="geometry" />
+        </mxCell>
+        <mxCell id="page-title" value="Ojo Camba ? Operaci?n municipal y cuadrillas" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=22;fontStyle=1;fontColor=#17324D;" vertex="1" parent="1">
+          <mxGeometry x="285" y="35" width="1000" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="page-note" value="El responsable es un t?cnico con responsabilidad dentro de su cuadrilla, no un rol global independiente." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontColor=#526575;" vertex="1" parent="1">
+          <mxGeometry x="285" y="70" width="1400" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="section-1" value="TRABAJO DE CAMPO" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;fontColor=#287346;" vertex="1" parent="1">
+          <mxGeometry x="285" y="95" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="section-2" value="COORDINACI?N Y ADMINISTRACI?N OPERATIVA" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;fontColor=#175A8A;" vertex="1" parent="1">
+          <mxGeometry x="285" y="680" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-tech" value="T?cnico&lt;br&gt;en campo" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#287346;fillColor=#EAF6EE;" vertex="1" parent="1">
+          <mxGeometry x="30" y="205" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-lead" value="Responsable de&lt;br&gt;cuadrilla" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#287346;fillColor=#EAF6EE;" vertex="1" parent="1">
+          <mxGeometry x="30" y="485" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-coordinator" value="Coordinador&lt;br&gt;operativo" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#175A8A;fillColor=#EAF4FB;" vertex="1" parent="1">
+          <mxGeometry x="30" y="820" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-it" value="Encargado&lt;br&gt;de TI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#7041A6;fillColor=#F4ECFA;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1040" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-10" value="&lt;b&gt;CU-10&lt;/b&gt;&lt;br&gt;Consultar reportes y Casos de Obra cercanos a la ubicaci?n actual." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="125" width="420" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-11" value="&lt;b&gt;CU-11 ? REQUISITO PENDIENTE&lt;/b&gt;&lt;br&gt;Crear en campo un Caso de Obra agrupando reportes duplicados cercanos. Requisito documentado; API actual restringida a Backoffice." style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF7E8;strokeColor=#C57B00;strokeWidth=2;dashed=1;dashPattern=8 4;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="115" width="460" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-12" value="&lt;b&gt;CU-12&lt;/b&gt;&lt;br&gt;Registrar avances con comentario, foto, recursos y fecha estimada, sin exigir cambio de estado." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="110" width="420" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-13" value="&lt;b&gt;CU-13&lt;/b&gt;&lt;br&gt;Corregir las coordenadas GPS desde el lugar del problema." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="275" width="440" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-14" value="&lt;b&gt;CU-14&lt;/b&gt;&lt;br&gt;Actualizar el estado del Caso de Obra seg?n las transiciones permitidas." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="275" width="480" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-23" value="&lt;b&gt;CU-23&lt;/b&gt;&lt;br&gt;Consultar obras asignadas, visitas y ruta diaria." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="425" width="420" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-24" value="&lt;b&gt;CU-24&lt;/b&gt;&lt;br&gt;Registrar la llegada a una visita con coordenadas GPS." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="425" width="460" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-25" value="&lt;b&gt;CU-25&lt;/b&gt;&lt;br&gt;Proponer el resultado de una visita con evidencia y destino/rechazo cuando aplique." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="415" width="420" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-27" value="&lt;b&gt;CU-27&lt;/b&gt;&lt;br&gt;Derivar un Caso de Obra a una entidad externa, con motivo y evidencia." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="470" y="565" width="460" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-26" value="&lt;b&gt;CU-26&lt;/b&gt;&lt;br&gt;Confirmar propuestas de resultado; el coordinador revisa excepciones." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="990" y="565" width="490" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-21" value="&lt;b&gt;CU-21&lt;/b&gt;&lt;br&gt;Asignar o reasignar una cuadrilla a un Caso de Obra y priorizar su atenci?n." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="745" width="440" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-22" value="&lt;b&gt;CU-22&lt;/b&gt;&lt;br&gt;Planificar visitas, asignarlas a t?cnicos y ordenar la ruta de la cuadrilla." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#4C9A69;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="790" y="735" width="460" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-28" value="&lt;b&gt;CU-28&lt;/b&gt;&lt;br&gt;Consultar indicadores operativos, carga y capacidad de cuadrillas." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="745" width="400" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-19" value="&lt;b&gt;CU-19&lt;/b&gt;&lt;br&gt;Administrar cuadrillas, especialidades y miembros." style="ellipse;whiteSpace=wrap;html=1;fillColor=#F4ECFA;strokeColor=#9166B5;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="480" y="915" width="450" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-29" value="&lt;b&gt;CU-29&lt;/b&gt;&lt;br&gt;Consultar y configurar los umbrales operativos." style="ellipse;whiteSpace=wrap;html=1;fillColor=#F4ECFA;strokeColor=#9166B5;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="915" width="470" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="gen-actor-lead" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#526575;endArrow=block;endFill=0;endSize=14;" edge="1" parent="1" source="actor-lead" target="actor-tech">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-10">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-11">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-12">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-13">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-14">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-23">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-24">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-25">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-tech-CU-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-tech" target="CU-27">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-lead-CU-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-lead" target="CU-22">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-lead-CU-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-lead" target="CU-26">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-21">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-26">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-28">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-it-CU-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-it" target="CU-19">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-it-CU-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-it" target="CU-29">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="ojo-camba-casos-3" name="03 Gobierno, IA y predicci?n">
+    <mxGraphModel dx="1800" dy="1050" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1050" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="system-boundary" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#17324D;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="25" width="1500" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="page-title" value="Ojo Camba ? Gobierno, IA, predicci?n y estado" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=22;fontStyle=1;fontColor=#17324D;" vertex="1" parent="1">
+          <mxGeometry x="285" y="35" width="1000" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="page-note" value="La autoridad consulta agregados; las alertas accionables y decisiones operativas son exclusivas del coordinador." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontColor=#526575;" vertex="1" parent="1">
+          <mxGeometry x="285" y="70" width="1400" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="section-1" value="ADMINISTRACI?N E IA" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;fontColor=#7041A6;" vertex="1" parent="1">
+          <mxGeometry x="285" y="95" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="section-2" value="AN?LISIS PREDICTIVO Y TRANSPARENCIA" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;fontColor=#175A8A;" vertex="1" parent="1">
+          <mxGeometry x="285" y="300" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-it" value="Encargado&lt;br&gt;de TI" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#7041A6;fillColor=#F4ECFA;" vertex="1" parent="1">
+          <mxGeometry x="30" y="145" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-coordinator" value="Coordinador&lt;br&gt;operativo" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#175A8A;fillColor=#EAF4FB;" vertex="1" parent="1">
+          <mxGeometry x="30" y="395" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-authority" value="Autoridad&lt;br&gt;municipal" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#175A8A;fillColor=#EAF4FB;" vertex="1" parent="1">
+          <mxGeometry x="30" y="665" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-public" value="P?blico / Auditor&lt;br&gt;de sistemas" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;whiteSpace=wrap;fontSize=13;fontStyle=1;strokeColor=#526575;fillColor=#F1F4F6;" vertex="1" parent="1">
+          <mxGeometry x="30" y="900" width="170" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-20" value="&lt;b&gt;CU-20&lt;/b&gt;&lt;br&gt;Registrar y aplicar solicitudes institucionales de alta, cambio o baja de funciones y conformaci?n de cuadrillas." style="ellipse;whiteSpace=wrap;html=1;fillColor=#F4ECFA;strokeColor=#9166B5;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="125" width="450" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-33" value="&lt;b&gt;CU-33&lt;/b&gt;&lt;br&gt;Configurar y probar proveedores y credenciales de IA." style="ellipse;whiteSpace=wrap;html=1;fillColor=#F4ECFA;strokeColor=#9166B5;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="130" width="430" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-39" value="&lt;b&gt;CU-39&lt;/b&gt;&lt;br&gt;Reentrenar y comparar los modelos predictivos." style="ellipse;whiteSpace=wrap;html=1;fillColor=#F4ECFA;strokeColor=#9166B5;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="130" width="420" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-34" value="&lt;b&gt;CU-34&lt;/b&gt;&lt;br&gt;Consultar m?tricas, procedencia, limitaciones y pron?stico del modelo." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="355" width="450" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-35" value="&lt;b&gt;CU-35&lt;/b&gt;&lt;br&gt;Consultar alertas de capacidad para decidir d?nde intervenir." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="360" width="430" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-36" value="&lt;b&gt;CU-36&lt;/b&gt;&lt;br&gt;Comparar casos observados y estimados por zona/categor?a sin mezclar fuentes." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="350" width="420" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-37" value="&lt;b&gt;CU-37&lt;/b&gt;&lt;br&gt;Aceptar, modificar o descartar una recomendaci?n y registrar el motivo." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="300" y="535" width="450" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-38" value="&lt;b&gt;CU-38&lt;/b&gt;&lt;br&gt;Consultar el historial de decisiones y su precisi?n retrospectiva." style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF4FB;strokeColor=#4A8DB8;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="535" width="430" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="CU-15" value="&lt;b&gt;CU-15&lt;/b&gt;&lt;br&gt;Consultar salud, uptime y latencia de microservicios e historial de disponibilidad." style="ellipse;whiteSpace=wrap;html=1;fillColor=#F1F4F6;strokeColor=#718096;fontSize=13;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="535" width="420" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="link-actor-it-CU-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-it" target="CU-20">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-it-CU-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-it" target="CU-33">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-it-CU-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-it" target="CU-34">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-it-CU-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-it" target="CU-39">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-34">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-35">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-36">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-37">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-coordinator-CU-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-coordinator" target="CU-38">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-authority-CU-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-authority" target="CU-34">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-authority-CU-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-authority" target="CU-36">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-authority-CU-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-authority" target="CU-38">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="link-actor-public-CU-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#718096;strokeWidth=1.2;endArrow=none;startArrow=none;" edge="1" parent="1" source="actor-public" target="CU-15">
+          <mxGeometry x="0" y="0" width="0" height="0" as="geometry" relative="1" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

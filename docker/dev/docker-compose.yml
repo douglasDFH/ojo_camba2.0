@@ -24,7 +24,7 @@ services:
     networks:
       - ojo-camba-net
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ojocamba']
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ojocamba']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,6 +61,24 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+
+  db-migrate:
+    build:
+      context: ../../
+      dockerfile: docker/dev/Dockerfile.ms-auth
+    command: ['node', '/app/scripts/db-migrate.mjs']
+    volumes:
+      - ../../scripts/db-migrate.mjs:/app/scripts/db-migrate.mjs:ro
+    environment:
+      DATABASE_URL: postgresql://ojocamba:ojocamba_secret@postgres:5432/ojocamba
+    networks:
+      - ojo-camba-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
 
   ms-register:
     build:
@@ -80,6 +98,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
       seaweedfs:
         condition: service_healthy
 
@@ -103,6 +123,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
       seaweedfs:
         condition: service_healthy
 
@@ -123,6 +145,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
 
   ms-ia:
     build:
@@ -138,7 +162,7 @@ services:
       MS_ADMIN_PORT: 3003
       MS_REGISTER_HOST: ms-register
       MS_REGISTER_PORT: 3002
-      AI_CONFIG_ENCRYPTION_KEY: ${AI_CONFIG_ENCRYPTION_KEY}
+      AI_CONFIG_ENCRYPTION_KEY: ${AI_CONFIG_ENCRYPTION_KEY:-}
       GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
       GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai/v1}
     networks:
@@ -169,6 +193,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
 
   # ── API Gateways HTTP (exponen puerto al host) ──────────────
   gateway-principal:
@@ -178,7 +204,7 @@ services:
     volumes:
       - ../../backend/gateway-principal/src:/app/backend/gateway-principal/src
     ports:
-      - '${GATEWAY_PRINCIPAL_PORT:-3000}:3000'
+      - '${GATEWAY_PRINCIPAL_PORT:-3008}:3000'
     environment:
       PORT_GT_P: 3000
       CORS_ORIGIN: http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176
@@ -230,6 +256,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
       ms-auth:
         condition: service_started
       ms-register:
@@ -252,7 +280,7 @@ services:
     ports:
       - '5173:5173'
     environment:
-      VITE_API_URL: http://localhost:${GATEWAY_PRINCIPAL_PORT:-3000}
+      VITE_API_URL: http://localhost:${GATEWAY_PRINCIPAL_PORT:-3008}
     networks:
       - ojo-camba-net
 
@@ -266,7 +294,7 @@ services:
     ports:
       - '5174:5174'
     environment:
-      VITE_API_URL: http://localhost:${GATEWAY_PRINCIPAL_PORT:-3000}
+      VITE_API_URL: http://localhost:${GATEWAY_PRINCIPAL_PORT:-3008}
     networks:
       - ojo-camba-net
 
@@ -280,7 +308,7 @@ services:
     ports:
       - '5175:5175'
     environment:
-      VITE_API_URL: http://localhost:${GATEWAY_PRINCIPAL_PORT:-3000}
+      VITE_API_URL: http://localhost:${GATEWAY_PRINCIPAL_PORT:-3008}
     networks:
       - ojo-camba-net
 

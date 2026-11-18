@@ -114,57 +114,27 @@ classDiagram
     ActualizacionesCaso ..> EstadoReporte : usa
 ```
 
+> **Nota de cobertura:** este diagrama de clases representa el núcleo de reportes, pero no todo el
+> dominio operativo que hoy soporta el sistema. Para documentar el modelo completo faltan, como
+> mínimo, las estructuras de cuadrillas y miembros, visitas y propuestas, derivaciones, solicitudes
+> de acceso, configuración de IA, decisiones de recomendaciones e historial de disponibilidad. Las
+> funciones predictivas también requieren reflejar sus datos de métricas e historial. No debe
+> interpretarse este diagrama como el esquema completo de la base de datos.
+
 ---
 
 ## 2. Diagrama de Casos de Uso
 
-```mermaid
-graph TD
-    C(["👤 Ciudadano"])
-    M(["👤 Moderador / Admin"])
-    T(["👤 Técnico en Campo"])
-    P(["👤 Usuario Público"])
+El inventario funcional ampliado, con actores según la matriz de permisos y los 39 casos, está en
+[`casos_de_uso.md`](casos_de_uso.md). El diagrama Draw.io editable está en
+[`casos_de_uso.drawio`](casos_de_uso.drawio) y se divide en tres páginas para facilitar su lectura:
 
-    subgraph Sistema_Ojo_Camba["Sistema Ojo Camba"]
-        CU01["CU-01: Visualizar mapa de calor"]
-        CU02["CU-02: Registrar reporte urbano"]
-        CU03["CU-03: Crear cuenta de usuario"]
-        CU04["CU-04: Consultar bitácora del reporte"]
-        CU05["CU-05: Compartir estado del reporte"]
+1. Ciudadanía y moderación.
+2. Operación municipal y cuadrillas.
+3. Gobierno, IA, predicción y estado público.
 
-        CU06["CU-06: Ver bandeja de reportes"]
-        CU07["CU-07: Cambiar estado del reporte"]
-        CU08["CU-08: Agrupar en Caso de Obra"]
-        CU09["CU-09: Banear DeviceID"]
-
-        CU10["CU-10: Ver reportes cercanos por H3"]
-        CU11["CU-11: Crear Caso de Obra en campo"]
-        CU12["CU-12: Registrar actualización en bitácora"]
-        CU13["CU-13: Corregir coordenadas GPS"]
-        CU14["CU-14: Cambiar estado del Caso de Obra"]
-
-        CU15["CU-15: Ver estado de microservicios"]
-    end
-
-    C --> CU01
-    C --> CU02
-    C --> CU03
-    C --> CU04
-    C --> CU05
-
-    M --> CU06
-    M --> CU07
-    M --> CU08
-    M --> CU09
-
-    T --> CU10
-    T --> CU11
-    T --> CU12
-    T --> CU13
-    T --> CU14
-
-    P --> CU15
-```
+El CU-11 conserva el requisito de creación de un Caso de Obra desde campo, pero está marcado como
+pendiente para técnicos: el endpoint actual de creación de grupos solo está expuesto a Backoffice.
 
 ---
 

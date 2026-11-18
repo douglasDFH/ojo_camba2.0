@@ -49,11 +49,54 @@ docker/prod/      Stack de producción (multi-stage builds)
 
 ## Prerrequisitos
 
-- Node.js >= 22
-- pnpm >= 9
 - Docker + Docker Compose
+- Node.js >= 22 y pnpm >= 9 (sólo para los comandos `pnpm`)
 
-## Inicio rápido
+## Levantar todo con Docker
+
+Docker Desktop debe estar iniciado. Desde la raíz del repositorio:
+
+```bash
+# Construye las imágenes, crea la base de datos, aplica migraciones y levanta todo
+pnpm docker:dev:up
+
+# Ver logs
+pnpm docker:dev:logs
+
+# Detener los servicios (los datos de PostgreSQL y SeaweedFS se conservan)
+pnpm docker:dev:down
+```
+
+La API principal se publica por defecto en el puerto 3008 para evitar conflictos con
+servicios que ya usan el puerto 3000. Puedes cambiarlo definiendo `GATEWAY_PRINCIPAL_PORT`
+en el archivo `.env` de la raíz.
+
+Al iniciar por primera vez, Docker prepara PostgreSQL 16 con PostGIS/H3, ejecuta las
+migraciones y luego inicia los microservicios, gateways y aplicaciones. Las URLs locales son:
+
+| Aplicación | URL |
+|---|---|
+| Reportes ciudadanos | http://localhost:5173 |
+| Backoffice | http://localhost:5174 |
+| Técnicos | http://localhost:5175 |
+| Estado del sistema | http://localhost:5176 |
+| API principal | http://localhost:3008 |
+| API de estado | http://localhost:3005 |
+| SeaweedFS (S3) | http://localhost:9010 |
+
+Para administrar credenciales de proveedores de IA, define una clave persistente de 32 bytes
+en hexadecimal en el archivo `.env` de la raíz (`AI_CONFIG_ENCRYPTION_KEY`). Puedes generarla
+con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. No cambies
+esa clave mientras existan credenciales cifradas en la base de datos.
+
+`pnpm docker:dev:down` no elimina los volúmenes. No uses `docker compose down -v` salvo que
+quieras borrar permanentemente la base de datos y los archivos cargados.
+
+## Desarrollo nativo + infraestructura en Docker (alternativa)
+
+Este flujo levanta **sólo PostgreSQL y SeaweedFS** en Docker y ejecuta backend y frontend
+directamente en el host. No lo combines con `pnpm docker:dev:up`, porque son proyectos Compose
+separados y terminarías con dos bases de datos y dos servicios de archivos.
 
 ```bash
 # 1. Instalar dependencias
@@ -70,14 +113,20 @@ cp backend/ms-gamify/.env.example     backend/ms-gamify/.env
 cp backend/gateway-principal/.env.example backend/gateway-principal/.env
 cp backend/gateway-status/.env.example    backend/gateway-status/.env
 
-# 4. Levantar infraestructura (PostgreSQL + SeaweedFS)
+# 4. Levantar sólo infraestructura (PostgreSQL + SeaweedFS)
 pnpm docker:up
 
-# 5. Arrancar todos los servicios en modo dev
+# 5. Arrancar backend y frontend en el host
 pnpm dev
 
 # 6. Verificar que todo esté corriendo
 pnpm health
+```
+
+Para detener sólo esta infraestructura:
+
+```bash
+pnpm docker:down
 ```
 
 ## Comandos útiles

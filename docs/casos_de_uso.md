@@ -1,32 +1,84 @@
-# Archivo: casos_de_uso.md
+# Casos de Uso del Sistema Ojo Camba
 
-# Casos de Uso del Sistema
+**Alcance:** requisitos funcionales consolidados a partir del backlog, la matriz de permisos,
+la arquitectura, las aplicaciones y los endpoints actuales. El diagrama editable está en
+[`casos_de_uso.drawio`](casos_de_uso.drawio).
 
-**Descripción:** Listado de las interacciones principales que los diferentes actores (Ciudadano, Moderador, Técnico y Público) pueden realizar dentro de la plataforma Ojo Camba. Un mismo usuario puede poseer múltiples roles simultáneamente (ej. ser Ciudadano reportante y Técnico de cuadrilla).
+Un usuario puede tener varios roles simultáneamente. El **responsable de cuadrilla** no es un
+rol global: es un técnico asignado como responsable dentro de una cuadrilla.
 
-## Actor: Ciudadano (Anónimo o Registrado)
+## Ciudadanía
 
-* **CU-01:** Visualizar el mapa de calor de problemas urbanos en tiempo real.
-* **CU-02:** Registrar un nuevo reporte urbano adjuntando fotografía, categoría y ubicación GPS.
-* **CU-03:** Crear una cuenta de usuario y enlazar su historial de reportes previos mediante su DeviceID.
-* **CU-04:** Consultar la "Bitácora Pública" (línea de tiempo) de su reporte para ver los avances diarios, comentarios y fotos subidas por las cuadrillas.
-* **CU-05:** Compartir el estado de su reporte en redes sociales mediante un enlace o sticker dinámico.
+* **CU-01:** Visualizar el mapa de calor de problemas urbanos.
+* **CU-02:** Registrar un reporte con fotografía, categoría, GPS y DeviceID.
+* **CU-03:** Crear una cuenta y vincular el historial de reportes anónimos mediante DeviceID.
+* **CU-04:** Consultar la bitácora pública de un reporte o del Caso de Obra al que pertenece.
+* **CU-05:** Compartir el estado de un reporte o Caso de Obra mediante enlace o sticker.
+* **CU-16:** Iniciar y cerrar sesión y renovar la sesión autenticada.
+* **CU-17:** Consultar el perfil y los reportes propios.
+* **CU-18:** Consultar puntos, nivel y progreso de gamificación.
 
-## Actor: Moderador Comunitario / Administrador
+## Moderación comunitaria / Backoffice
 
-* **CU-06:** Visualizar la bandeja de entrada de reportes en estado inicial ("Reportado").
-* **CU-07:** Validar un reporte visualmente y aceptarlo o rechazarlo. Al aceptar, el sistema crea automáticamente un Caso de Obra (`GrupoReporte`) con código único (ej. `O-26-0000001`), asigna el reporte al grupo y cambia el estado a "Aceptado". El moderador puede confirmar o corregir la categoría del grupo en ese momento.
-* **CU-08:** Fusionar reportes adicionales de una misma zona en un Caso de Obra ya existente (agregar reportes sueltos al grupo).
-* **CU-09:** Bloquear (banear) de forma permanente el DeviceID de un usuario por generar spam.
+* **CU-06:** Revisar la bandeja de reportes pendientes.
+* **CU-07:** Validar, aceptar o rechazar un reporte; al aceptarlo, crear o asignar un Caso de Obra
+  y confirmar o corregir su categoría.
+* **CU-08:** Agrupar reportes adicionales en un Caso de Obra existente.
+* **CU-09:** Bloquear o desbloquear el DeviceID de un dispositivo.
+* **CU-30:** Consultar alertas, historial y métricas de calidad de la revisión.
+* **CU-31:** Consultar el asistente de IA para apoyo en el Backoffice.
+* **CU-32:** Solicitar apoyo de IA para triaje, sugerencias de hechos y recomendación de cuadrilla.
 
-## Actor: Técnico en Campo (Cuadrilla)
+## Técnico en campo
 
-* **CU-10:** Visualizar reportes o Casos de Obra en un radio cercano basados en la ubicación actual (Hexágonos H3 resolución 13).
-* **CU-11:** Agrupar en terreno múltiples reportes duplicados cercanos entre sí (mismo hexágono o vecino), creando un "Caso de Obra" oficial con código único (Ej: O-26-0000001).
-* **CU-12:** Registrar una actualización en la bitácora de trabajo (diario de obra) adjuntando fotos, comentarios, necesidades de maquinaria y estimaciones de fecha de fin, sin cambiar obligatoriamente el estado general.
-* **CU-13:** Actualizar las coordenadas GPS exactas del problema al llegar al lugar.
-* **CU-14:** Cambiar el estado general del Caso de Obra a "En Trabajo" o "Finalizado".
+* **CU-10:** Consultar reportes y Casos de Obra cercanos a su ubicación.
+* **CU-11:** Crear en campo un Caso de Obra agrupando reportes duplicados cercanos.
+* **CU-12:** Registrar una actualización con comentario, foto, recursos solicitados y fecha estimada,
+  sin exigir un cambio de estado.
+* **CU-13:** Corregir las coordenadas GPS del problema desde el lugar.
+* **CU-14:** Actualizar el estado del Caso de Obra conforme a las transiciones permitidas.
+* **CU-23:** Consultar obras asignadas, visitas y ruta diaria.
+* **CU-24:** Registrar la llegada a una visita con coordenadas GPS.
+* **CU-25:** Proponer el resultado de una visita, adjuntar evidencia e indicar derivación o rechazo
+  cuando corresponda.
+* **CU-27:** Registrar la derivación de un Caso de Obra a una entidad externa, con motivo y evidencia.
 
-## Actor: Usuario Público / Auditor de Sistemas
+> **Brecha de implementación en CU-11:** el requisito está documentado en HU-04, pero el endpoint
+> actual de creación de grupos (`POST /admin/groups`) está protegido para Backoffice. El gateway no
+> expone actualmente esa acción al técnico. El diagrama marca CU-11 como requisito pendiente de
+> habilitación para ese actor; no lo presenta como una función ya disponible.
 
-* **CU-15:** Visualizar el estado de conexión (uptime y latencia) de cada microservicio en la App de Status.
+## Responsable de cuadrilla
+
+* **CU-22:** Planificar visitas y asignarlas a técnicos, ordenando la ruta de la cuadrilla.
+* **CU-26:** Confirmar propuestas de resultado de la cuadrilla; las excepciones pueden ser revisadas
+  por el coordinador operativo.
+
+## Coordinador operativo
+
+* **CU-21:** Asignar o reasignar una cuadrilla a un Caso de Obra y priorizar la operación.
+* **CU-28:** Consultar indicadores operativos, carga y capacidad de las cuadrillas.
+* **CU-35:** Consultar alertas de capacidad para decidir dónde intervenir.
+* **CU-36:** Comparar casos observados y estimados por zona y categoría, sin confundir ambas fuentes.
+* **CU-37:** Aceptar, modificar o descartar una recomendación, registrando el motivo.
+* **CU-38:** Consultar el historial de decisiones y su precisión retrospectiva.
+
+## Encargado de TI
+
+* **CU-19:** Administrar cuadrillas, especialidades y miembros.
+* **CU-20:** Registrar y aplicar solicitudes institucionales de alta, cambio o baja de funciones y
+  conformación de cuadrillas; gestionar los roles de usuarios.
+* **CU-29:** Consultar y configurar los umbrales operativos.
+* **CU-33:** Configurar y probar proveedores y credenciales de IA.
+* **CU-34:** Consultar métricas, procedencia y limitaciones de los modelos predictivos.
+* **CU-39:** Reentrenar y volver a comparar los modelos predictivos.
+
+## Autoridad municipal
+
+* **CU-34:** Consultar métricas y procedencia del modelo.
+* **CU-36:** Consultar la comparación agregada entre casos observados y estimados.
+* **CU-38:** Consultar el historial agregado de decisiones y precisión retrospectiva.
+
+## Público / Auditor de sistemas
+
+* **CU-15:** Consultar el estado de los microservicios, su latencia y el historial de uptime.

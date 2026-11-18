@@ -4,6 +4,7 @@ import {
   MapPin,
   ClipboardList,
   FolderOpen,
+  ShieldAlert,
   Users,
   LogOut,
   Construction,
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { to: '/revisar/historial', icon: History, label: 'Historial' },
   { to: '/revisar/calidad', icon: BarChart3, label: 'Calidad' },
   { to: '/casos', icon: FolderOpen, label: 'Casos' },
+  { to: '/casos/rechazos-campo', icon: ShieldAlert, label: 'Rechazos de campo' },
   { to: '/accesos', icon: Users, label: 'Accesos y cuadrillas' },
   { to: '/configuracion/ia', icon: Settings2, label: 'IA y respaldos' },
 ];
@@ -99,9 +101,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {itemsVisibles.map(({ to, icon: Icon, label }) => {
+            const coincide = (ruta: string) =>
+              location.pathname === ruta ||
+              (ruta !== '/' && ruta !== '/revisar' && location.pathname.startsWith(`${ruta}/`));
+            // Gana el ítem más específico: /casos/rechazos-campo no marca también /casos.
             const active =
-              location.pathname === to ||
-              (to !== '/' && to !== '/revisar' && location.pathname.startsWith(`${to}/`));
+              coincide(to) &&
+              !itemsVisibles.some((item) => item.to.length > to.length && coincide(item.to));
             return (
               <NavLink
                 key={to}

@@ -7,6 +7,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RevisarPage from './pages/RevisarPage';
 import CasosPage from './pages/CasosPage';
+import RechazosCampoPage from './pages/RechazosCampoPage';
 import CasoDetallePage from './pages/CasoDetallePage';
 import UsuariosPage from './pages/UsuariosPage';
 import GestionAccesosPage from './pages/GestionAccesosPage';
@@ -99,6 +100,14 @@ export default function App() {
                           element={
                             <RoleRoute>
                               <CasosPage />
+                            </RoleRoute>
+                          }
+                        />
+                        <Route
+                          path="/casos/rechazos-campo"
+                          element={
+                            <RoleRoute>
+                              <RechazosCampoPage />
                             </RoleRoute>
                           }
                         />

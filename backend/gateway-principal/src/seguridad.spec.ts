@@ -9,7 +9,12 @@ import { AuthController } from './auth.controller';
 import { GamifyController } from './gamify.controller';
 import { ReportesController } from './reportes.controller';
 import { EventsGateway } from './events/events.gateway';
-import { exigirPropioOGestion, OptionalAuthGuard, TokenValidation } from './roles.guard';
+import {
+  exigirPropioOGestion,
+  OptionalAuthGuard,
+  ROLES_REQUERIDOS,
+  TokenValidation,
+} from './roles.guard';
 
 /**
  * Bloque 1 de la auditoría (issue #1): ninguna ruta que modifica datos o
@@ -61,6 +66,15 @@ describe('Rutas del gateway sin autenticación', () => {
       expect(sinGuard.sort()).toEqual([...(PUBLICAS[nombre] ?? [])].sort());
     },
   );
+
+  it('el listado de usuarios es solo para el encargado de IT (issue #3)', () => {
+    const roles = Reflect.getMetadata(
+      ROLES_REQUERIDOS,
+      AuthController.prototype.listUsers,
+    ) as string[];
+    expect(tieneGuard(AuthController, 'listUsers')).toBe(true);
+    expect(roles).toEqual([ROLES.ENCARGADO_IT]);
+  });
 
   it('ya no existe la ruta para regalar puntos', () => {
     expect(rutas(GamifyController)).not.toContain('award');

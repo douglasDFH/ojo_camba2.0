@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { listMisObras, type VisitaCaso } from '../lib/tecnicoApi';
 import { friendlyError } from '../lib/errors';
+import { hoyLocal } from '../lib/fecha';
 import { useOperacionContext } from '../components/OperacionProvider';
 
 export default function InicioOperativoPage() {
@@ -16,7 +17,7 @@ export default function InicioOperativoPage() {
       .catch((err) => setError(friendlyError(err)));
   }, []);
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyLocal();
   const hoyTotal = visitas.filter((visita) => visita.fecha_planificada === hoy).length;
   const pendientesLlegada = visitas.filter((visita) => !visita.llegada_en).length;
   const esCoordinador = contexto?.roles.includes('coordinador_operativo');
@@ -60,10 +61,13 @@ export default function InicioOperativoPage() {
       )}
 
       {contexto?.es_responsable && (
-        <div className="flex min-h-[52px] items-center gap-3 rounded-3xl-2 border border-arcilla bg-perla px-4 text-sm text-tierra">
+        <Link
+          to="/cuadrilla"
+          className="flex min-h-[52px] items-center gap-3 rounded-3xl-2 border border-arcilla bg-perla px-4 text-sm text-tierra"
+        >
           <AlertTriangle className="h-5 w-5 text-sol-camba" />
-          Eres responsable de cuadrilla: tendrás una vista adicional de distribución y alertas.
-        </div>
+          Eres responsable de cuadrilla: reparte visitas y decide las propuestas de tu equipo.
+        </Link>
       )}
 
       {esCoordinador ? (

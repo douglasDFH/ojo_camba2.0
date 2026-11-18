@@ -69,6 +69,8 @@ export const TCP_PATTERNS = {
     REGISTRAR_LLEGADA_VISITA: 'admin.registrar_llegada_visita',
     PROPONER_RESULTADO_VISITA: 'admin.proponer_resultado_visita',
     CONFIRMAR_PROPUESTA_VISITA: 'admin.confirmar_propuesta_visita',
+    DESCARTAR_PROPUESTA_VISITA: 'admin.descartar_propuesta_visita',
+    LIST_PROPUESTAS_PENDIENTES: 'admin.list_propuestas_pendientes',
     REGISTRAR_DECISION_RECOMENDACION: 'admin.registrar_decision_recomendacion',
     LIST_DECISIONES_RECOMENDACION: 'admin.list_decisiones_recomendacion',
     GET_CASOS_POR_ZONA: 'admin.get_casos_por_zona',

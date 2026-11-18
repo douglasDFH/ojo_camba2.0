@@ -333,6 +333,20 @@ export class AdminController {
     return this.operacionService.confirmarPropuestaVisita(dto);
   }
 
+  @MessagePattern(TCP_PATTERNS.ADMIN.DESCARTAR_PROPUESTA_VISITA)
+  descartarPropuestaVisita(
+    @Payload() dto: { propuesta_id: number; usuario_id: number; motivo_decision?: string },
+  ) {
+    return this.operacionService.descartarPropuestaVisita(dto);
+  }
+
+  @MessagePattern(TCP_PATTERNS.ADMIN.LIST_PROPUESTAS_PENDIENTES)
+  propuestasPendientes(
+    @Payload() dto: { usuario_id: number; alcance: 'cuadrilla' | 'coordinacion' },
+  ) {
+    return this.operacionService.propuestasPendientes(dto);
+  }
+
   @MessagePattern(TCP_PATTERNS.ADMIN.REGISTRAR_DECISION_RECOMENDACION)
   registrarDecisionRecomendacion(@Payload() dto: RegistrarDecisionDto) {
     return this.prediccionDecisionesService.registrarDecision(dto);

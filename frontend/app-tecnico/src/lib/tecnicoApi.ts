@@ -72,11 +72,9 @@ export interface DetalleVisita {
   agrupacion: { total_reportes: number; reportes: ReporteDeGrupo[] };
 }
 
-/** Payload aceptado por POST /admin/groups/:id/updates */
+/** Bitácora de obra del técnico: no cambia el estado del caso. */
 export interface ActualizacionPayload {
-  usuario_id: number;
   comentario: string;
-  estado_nuevo?: string;
   recursos_solicitados?: string;
   fecha_estimada_fin?: string;
   lat_actualizada?: number;
@@ -84,28 +82,44 @@ export interface ActualizacionPayload {
   url_imagen?: string;
 }
 
-export async function listGroups(
-  page = 1,
-  limit = 20,
-  estado?: string,
-): Promise<PaginatedResponse<GrupoReporte>> {
-  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
-  if (estado) q.set('estado', estado);
-  return fetchAPI<PaginatedResponse<GrupoReporte>>(`/operacion/tecnico/groups?${q.toString()}`);
+/** Resultados que el técnico puede proponer al cerrar una visita. */
+export type EstadoPropuesto =
+  | 'EnTrabajo'
+  | 'Reencolado'
+  | 'Finalizado'
+  | 'Derivado'
+  | 'RechazadoCampo';
+
+export interface PropuestaPayload {
+  estado_propuesto: EstadoPropuesto;
+  comentario: string;
+  evidencia_url?: string;
+  entidad_destino?: string;
+  categoria_rechazo_id?: number;
 }
 
-export async function listGroupsNearby(
-  lat: number,
-  lng: number,
-  radiusM = 300,
-): Promise<GrupoReporte[]> {
-  return fetchAPI<GrupoReporte[]>(
-    `/operacion/tecnico/groups/nearby?lat=${lat}&lng=${lng}&radius=${radiusM}`,
-  );
+export interface MiembroCuadrilla {
+  cuadrilla_id: number;
+  usuario_id: number;
+  nombre: string;
+  es_responsable: boolean;
 }
 
-export async function getGroup(id: number): Promise<GrupoReporte> {
-  return fetchAPI<GrupoReporte>(`/operacion/tecnico/groups/${id}`);
+export interface BandejaCuadrilla extends PaginatedResponse<VisitaCaso> {
+  miembros: MiembroCuadrilla[];
+}
+
+export interface PropuestaPendiente {
+  id: number;
+  visita_id: number;
+  estado_propuesto: EstadoPropuesto;
+  comentario: string;
+  entidad_destino: string | null;
+  evidencia_url: string | null;
+  tecnico_nombre: string | null;
+  creado_en: string;
+  visita: VisitaCaso | null;
+  caso: GrupoReporte | null;
 }
 
 export async function getGroupReports(id: number): Promise<ReporteDeGrupo[]> {
@@ -117,24 +131,8 @@ export async function getCaseTimeline(id: number): Promise<Actualizacion[]> {
 }
 
 export async function addActualizacion(grupo_id: number, payload: ActualizacionPayload) {
-  return fetchAPI<{
-    id: number;
-    grupo_id: number;
-    estado_nuevo: string | null;
-    comentario: string;
-    creado_en: string;
-  }>(`/operacion/tecnico/groups/${grupo_id}/updates`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function registrarDerivacion(
-  grupo_id: number,
-  payload: { entidad_destino: string; motivo: string; evidencia_url: string },
-) {
-  return fetchAPI<{ id: number; entidad_destino: string; creado_en: string }>(
-    `/operacion/tecnico/groups/${grupo_id}/derivaciones`,
+  return fetchAPI<{ id: number; grupo_id: number; comentario: string; creado_en: string }>(
+    `/operacion/tecnico/groups/${grupo_id}/updates`,
     { method: 'POST', body: JSON.stringify(payload) },
   );
 }
@@ -161,5 +159,46 @@ export function registrarLlegadaVisita(id: number, lat: number, lng: number): Pr
   return fetchAPI<VisitaCaso>(`/operacion/visitas/${id}/llegada`, {
     method: 'POST',
     body: JSON.stringify({ lat, lng }),
+  });
+}
+
+export function proponerResultado(visitaId: number, payload: PropuestaPayload) {
+  return fetchAPI<{ requiere_confirmacion?: boolean; estado_actual?: string; id?: number }>(
+    `/operacion/visitas/${visitaId}/propuestas`,
+    { method: 'POST', body: JSON.stringify(payload) },
+  );
+}
+
+// ── Responsable de cuadrilla ────────────────────────────────────────────
+
+export function listVisitasCuadrilla(): Promise<BandejaCuadrilla> {
+  return fetchAPI<BandejaCuadrilla>('/operacion/mi-cuadrilla/visitas?limit=100');
+}
+
+export function asignarVisita(
+  visitaId: number,
+  payload: { tecnico_id: number; fecha_planificada: string; orden_ruta: number },
+): Promise<VisitaCaso> {
+  return fetchAPI<VisitaCaso>(`/operacion/mi-cuadrilla/visitas/${visitaId}/asignacion`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function listPropuestasCuadrilla(): Promise<PropuestaPendiente[]> {
+  return fetchAPI<PropuestaPendiente[]>('/operacion/mi-cuadrilla/propuestas');
+}
+
+export function confirmarPropuesta(id: number, motivo?: string) {
+  return fetchAPI<PropuestaPendiente>(`/operacion/mi-cuadrilla/propuestas/${id}/confirmar`, {
+    method: 'POST',
+    body: JSON.stringify({ motivo_decision: motivo }),
+  });
+}
+
+export function descartarPropuesta(id: number, motivo: string) {
+  return fetchAPI<PropuestaPendiente>(`/operacion/mi-cuadrilla/propuestas/${id}/descartar`, {
+    method: 'POST',
+    body: JSON.stringify({ motivo_decision: motivo }),
   });
 }

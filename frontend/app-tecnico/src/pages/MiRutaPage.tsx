@@ -2,16 +2,11 @@ import { CalendarDays, Navigation } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { listMiRuta, type VisitaCaso } from '../lib/tecnicoApi';
 import { friendlyError } from '../lib/errors';
+import { hoyLocal } from '../lib/fecha';
 import VisitaCard from '../components/VisitaCard';
 
-function fechaLocal(): string {
-  const hoy = new Date();
-  const zona = hoy.getTimezoneOffset() * 60_000;
-  return new Date(hoy.getTime() - zona).toISOString().slice(0, 10);
-}
-
 export default function MiRutaPage() {
-  const [fecha, setFecha] = useState(fechaLocal);
+  const [fecha, setFecha] = useState(hoyLocal);
   const [visitas, setVisitas] = useState<VisitaCaso[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');

@@ -51,10 +51,10 @@ pnpm pre-commit   # format + lint + build (10 servicios)
 
 ## Flujo de issues
 
-1. Rama `issue/ISSUE-XX-descripcion` desde `dev`
+1. Rama `issue/ISSUE-XX-descripcion` desde `main` actualizada (`git pull origin main`); `XX` es el número del issue en GitHub
 2. Implementar + tests
-3. PR a `dev`, merge con `--merge`
-4. Cerrar issue mencionando commits
+3. PR a `main`: el CI (lint, test y build) corre en cada PR hacia `main`. Merge con `--merge` cuando esté en verde
+4. Cerrar issue mencionando commits y borrar la rama ya fusionada
 
 ## Documentación relevante
 

@@ -1,5 +1,8 @@
 import { useState, useCallback } from 'react';
-import type { GpsFix } from '../lib/actualizacion';
+export interface GpsFix {
+  lat: number;
+  lng: number;
+}
 
 export type GeoStatus = 'idle' | 'loading' | 'success' | 'error';
 

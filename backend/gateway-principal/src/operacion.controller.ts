@@ -168,6 +168,60 @@ export class OperacionController {
     );
   }
 
+  @Get('mi-cuadrilla/propuestas')
+  @RequireRoles(ROLES.TECNICO)
+  propuestasMiCuadrilla(@Req() request: AuthenticatedRequest) {
+    return sendRpc(
+      this.admin.send(TCP_PATTERNS.ADMIN.LIST_PROPUESTAS_PENDIENTES, {
+        usuario_id: request.user.user_id,
+        alcance: 'cuadrilla',
+      }),
+    );
+  }
+
+  @Post('mi-cuadrilla/propuestas/:id/descartar')
+  @RequireRoles(ROLES.TECNICO)
+  descartarPropuestaCuadrilla(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: { motivo_decision?: string },
+  ) {
+    return sendRpc(
+      this.admin.send(TCP_PATTERNS.ADMIN.DESCARTAR_PROPUESTA_VISITA, {
+        propuesta_id: parseInt(id, 10),
+        usuario_id: request.user.user_id,
+        motivo_decision: dto.motivo_decision,
+      }),
+    );
+  }
+
+  @Get('excepciones/propuestas')
+  @RequireRoles(ROLES.COORDINADOR_OPERATIVO)
+  propuestasExcepcion(@Req() request: AuthenticatedRequest) {
+    return sendRpc(
+      this.admin.send(TCP_PATTERNS.ADMIN.LIST_PROPUESTAS_PENDIENTES, {
+        usuario_id: request.user.user_id,
+        alcance: 'coordinacion',
+      }),
+    );
+  }
+
+  @Post('excepciones/propuestas/:id/descartar')
+  @RequireRoles(ROLES.COORDINADOR_OPERATIVO)
+  descartarRechazoCampo(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: { motivo_decision?: string },
+  ) {
+    return sendRpc(
+      this.admin.send(TCP_PATTERNS.ADMIN.DESCARTAR_PROPUESTA_VISITA, {
+        propuesta_id: parseInt(id, 10),
+        usuario_id: request.user.user_id,
+        motivo_decision: dto.motivo_decision,
+      }),
+    );
+  }
+
   @Post('excepciones/propuestas/:id/rechazar')
   @RequireRoles(ROLES.COORDINADOR_OPERATIVO)
   confirmarRechazoCampo(
@@ -258,7 +312,15 @@ export class OperacionController {
   async updateGrupoTecnico(
     @Req() request: AuthenticatedRequest,
     @Param('id') id: string,
-    @Body() dto: Record<string, unknown>,
+    @Body()
+    dto: {
+      comentario: string;
+      recursos_solicitados?: string;
+      fecha_estimada_fin?: string;
+      lat_actualizada?: number;
+      lng_actualizada?: number;
+      url_imagen?: string;
+    },
   ) {
     const grupo_id = parseInt(id, 10);
     await sendRpc(
@@ -268,15 +330,21 @@ export class OperacionController {
       }),
     );
     return sendRpc(
+      // Bitácora de obra sin cambio de estado: el técnico cambia el estado del
+      // caso solo proponiendo el resultado de una visita (ver /visitas/:id/propuestas).
       this.admin.send(TCP_PATTERNS.ADMIN.UPDATE_CASE, {
-        ...dto,
+        comentario: dto.comentario,
+        recursos_solicitados: dto.recursos_solicitados,
+        fecha_estimada_fin: dto.fecha_estimada_fin,
+        lat_actualizada: dto.lat_actualizada,
+        lng_actualizada: dto.lng_actualizada,
+        url_imagen: dto.url_imagen,
         grupo_id,
         usuario_id: request.user.user_id,
       }),
     );
   }
 
-  @Post('tecnico/groups/:id/derivaciones')
   @RequireRoles(ROLES.TECNICO)
   registrarDerivacion(
     @Req() request: AuthenticatedRequest,

@@ -66,6 +66,9 @@ describe('AdminService', () => {
   let especialidadRepo: ReturnType<typeof makeRepoMock>;
   let gamifyClient: { emit: jest.Mock };
 
+  let secuencia = 0;
+  let fakeManagerQuery: jest.Mock;
+
   beforeEach(async () => {
     reporteRepo = makeRepoMock();
     grupoRepo = makeRepoMock();
@@ -87,20 +90,41 @@ describe('AdminService', () => {
         entity === GrupoReporte ? grupoRepo.count() : reporteRepo.count(),
       ),
       create: jest.fn((entity: unknown, x: unknown) =>
-        entity === GrupoReporte ? grupoRepo.create(x) : reporteRepo.create(x),
+        entity === GrupoReporte
+          ? grupoRepo.create(x)
+          : entity === ActualizacionCaso
+            ? actualizacionRepo.create(x)
+            : reporteRepo.create(x),
       ),
+      update: jest.fn((entity: unknown, criterio: unknown, cambios: unknown) =>
+        entity === GrupoReporte
+          ? grupoRepo.update(criterio, cambios)
+          : reporteRepo.update(criterio, cambios),
+      ),
+      // nextval('codigo_obra_seq'): la secuencia se simula con un contador.
+      query: jest.fn(() => Promise.resolve([{ numero: String(++secuencia) }])),
       createQueryBuilder: jest.fn((entity: unknown, alias: string) =>
         entity === GrupoReporte
           ? grupoRepo.createQueryBuilder(alias)
           : reporteRepo.createQueryBuilder(alias),
       ),
       save: jest.fn((x: Record<string, unknown>) =>
-        x && 'codigo_obra' in x ? grupoRepo.save(x) : reporteRepo.save(x),
+        x && 'comentario' in x
+          ? actualizacionRepo.save(x)
+          : x && ('codigo_obra' in x || 'estado_actual' in x)
+            ? grupoRepo.save(x)
+            : reporteRepo.save(x),
       ),
     };
-    (reporteRepo as unknown as { manager: unknown }).manager = {
+    secuencia = 0;
+    fakeManagerQuery = fakeManager.query;
+    const managerConTransaccion = {
       transaction: jest.fn((cb: (m: typeof fakeManager) => unknown) => cb(fakeManager)),
     };
+    // acceptReport usa el manager de Reporte; createGroup y updateCase, el de
+    // GrupoReporte. En TypeORM es el mismo EntityManager.
+    (reporteRepo as unknown as { manager: unknown }).manager = managerConTransaccion;
+    (grupoRepo as unknown as { manager: unknown }).manager = managerConTransaccion;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -131,33 +155,36 @@ describe('AdminService', () => {
   });
 
   describe('codigo_obra', () => {
-    it('acceptReport sin grupo_id genera codigo con formato O-YY-NNNNNNN', async () => {
+    it('acceptReport sin grupo_id toma el número de la secuencia (issue #3)', async () => {
       reporteRepo.findOne.mockResolvedValue({
         id: 1,
         estado: EstadoReporte.Reportado,
         usuario_id: null,
         categoria_id: 1,
       });
-      grupoRepo.count.mockResolvedValue(0);
 
       const result = await service.acceptReport({ report_id: 1, moderador_id: 1 });
 
       const yy = String(new Date().getFullYear()).slice(-2);
       expect(result.codigo_obra).toBe(`O-${yy}-0000001`);
       expect(result.codigo_obra).toMatch(/^O-\d{2}-\d{7}$/);
+      expect(fakeManagerQuery).toHaveBeenCalledWith(expect.stringContaining('codigo_obra_seq'));
+      // Ya no cuenta filas: contar repetía códigos con aceptaciones simultáneas.
+      expect(grupoRepo.count).not.toHaveBeenCalled();
     });
 
-    it('createGroup genera el mismo formato O-YY-NNNNNNN', async () => {
+    it('dos casos seguidos reciben códigos distintos aunque el conteo no cambie', async () => {
       reporteRepo.find.mockResolvedValue([
         { id: 1, estado: EstadoReporte.Reportado, categoria_id: 1 },
         { id: 2, estado: EstadoReporte.Reportado, categoria_id: 1 },
       ]);
       grupoRepo.count.mockResolvedValue(4);
 
-      const result = await service.createGroup({ report_ids: [1, 2], creado_por_usuario_id: 1 });
+      const primero = await service.createGroup({ report_ids: [1, 2], creado_por_usuario_id: 1 });
+      const segundo = await service.createGroup({ report_ids: [1, 2], creado_por_usuario_id: 1 });
 
-      const yy = String(new Date().getFullYear()).slice(-2);
-      expect(result.codigo_obra).toBe(`O-${yy}-0000005`);
+      expect(primero.codigo_obra).not.toBe(segundo.codigo_obra);
+      expect(segundo.codigo_obra).toMatch(/^O-\d{2}-0000002$/);
     });
   });
 

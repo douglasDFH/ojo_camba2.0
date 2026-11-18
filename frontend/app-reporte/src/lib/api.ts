@@ -15,6 +15,20 @@ export function authHeaders(conCuerpo = true): Record<string, string> {
   };
 }
 
+/**
+ * Mensaje que devolvió el servidor (el gateway responde JSON con "message").
+ * Si no hay uno legible, devuelve null para usar un texto genérico.
+ */
+export function mensajeDelServidor(err: unknown): string | null {
+  if (!(err instanceof Error)) return null;
+  try {
+    const cuerpo = JSON.parse(err.message) as { message?: unknown };
+    return typeof cuerpo.message === 'string' ? cuerpo.message : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getImageUrl(url_imagen: string | null): string {
   if (!url_imagen) return '';
   if (url_imagen.startsWith('http')) return url_imagen;

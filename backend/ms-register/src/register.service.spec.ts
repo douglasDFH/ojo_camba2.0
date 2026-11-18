@@ -66,6 +66,7 @@ describe('RegisterService.create', () => {
     reporteRepo = {
       create: jest.fn((x) => ({ id: 1, creado_en: new Date(), estado: 'Reportado', ...x })),
       save: jest.fn((x) => Promise.resolve(x)),
+      count: jest.fn().mockResolvedValue(0),
     };
     categoriaRepo = {
       findOne: jest.fn().mockResolvedValue({ id: 1, nombre: 'bache' }),
@@ -88,6 +89,66 @@ describe('RegisterService.create', () => {
   });
 
   afterEach(() => jest.restoreAllMocks());
+
+  describe('validaciones del reporte (issue #3)', () => {
+    const base = { device_id: 'd1', lat: -17.78, lng: -63.18, categoria_id: 1, imagen_base64: IMG };
+    const JPEG =
+      'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10]).toString('base64');
+
+    it('rechaza una ubicación fuera de Santa Cruz', async () => {
+      await expect(service.create({ ...base, lat: -16.5, lng: -68.15 })).rejects.toThrow(
+        'fuera del área de Santa Cruz',
+      );
+    });
+
+    it('rechaza coordenadas que no son números', async () => {
+      await expect(service.create({ ...base, lat: 'abc' as unknown as number })).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('rechaza una gravedad que no existe', async () => {
+      await expect(service.create({ ...base, gravedad: 'Catastrofica' })).rejects.toThrow(
+        'Gravedad inválida',
+      );
+    });
+
+    it('limita los reportes por dispositivo por hora con 429', async () => {
+      reporteRepo.count.mockResolvedValue(10);
+      await expect(service.create(base)).rejects.toMatchObject({ status: 429 });
+      expect(reporteRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('rechaza un archivo que dice ser imagen pero no lo es', async () => {
+      const falso =
+        'data:image/png;base64,' + Buffer.from('<script>alert(1)</script>').toString('base64');
+      await expect(service.create({ ...base, imagen_base64: falso })).rejects.toThrow(
+        'no es una imagen',
+      );
+    });
+
+    it('rechaza una imagen de más de 5 MB', async () => {
+      const grande = Buffer.alloc(5 * 1024 * 1024 + 1);
+      grande.set([0xff, 0xd8, 0xff]);
+      await expect(
+        service.create({
+          ...base,
+          imagen_base64: 'data:image/jpeg;base64,' + grande.toString('base64'),
+        }),
+      ).rejects.toThrow('máximo es 5 MB');
+    });
+
+    it('decide la extensión por los bytes reales del archivo', async () => {
+      const s3 = jest.spyOn(S3Client.prototype, 'send');
+      // Declarada como PNG, pero los bytes son de un JPEG.
+      await service.create({ ...base, imagen_base64: JPEG.replace('image/jpeg', 'image/png') });
+      const comando = s3.mock.calls.at(-1)?.[0] as unknown as {
+        input: { Key: string; ContentType: string };
+      };
+      expect(comando.input.Key).toMatch(/.jpg$/);
+      expect(comando.input.ContentType).toBe('image/jpeg');
+    });
+  });
 
   it('rechaza reportes de un dispositivo baneado sin subir la foto', async () => {
     dispositivoRepo.findOne.mockResolvedValue({ device_id: 'd1', is_banned: true });

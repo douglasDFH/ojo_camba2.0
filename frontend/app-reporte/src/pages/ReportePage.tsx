@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { isMobile } from 'react-device-detect';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { getDeviceId } from '../lib/device';
-import { fetchAPI } from '../lib/api';
+import { fetchAPI, mensajeDelServidor } from '../lib/api';
+import { leerFotoComprimida } from '../lib/imagen';
 import { enqueue, getQueue } from '../lib/offlineQueue';
-import { useAuthStore } from '../store/authStore';
 import { useState, useRef } from 'react';
 import {
   ArrowLeft,
@@ -34,7 +34,6 @@ export default function ReportePage() {
   const navigate = useNavigate();
   const geo = useGeolocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuthStore();
   const [imagen, setImagen] = useState<string | null>(null);
   const [categoriaId, setCategoriaId] = useState<number | null>(null);
   const [gravedad, setGravedad] = useState('Media');
@@ -42,12 +41,14 @@ export default function ReportePage() {
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setImagen(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      setImagen(await leerFotoComprimida(file));
+    } catch (err) {
+      setError((err as Error).message);
+    }
   };
 
   const handleSubmit = async () => {
@@ -62,7 +63,7 @@ export default function ReportePage() {
       categoria_id: categoriaId,
       gravedad,
       imagen_base64: imagen,
-      usuario_id: user?.id ?? undefined,
+      // El autor sale del token de sesión; no se manda usuario_id.
     };
 
     if (!navigator.onLine) {
@@ -75,9 +76,16 @@ export default function ReportePage() {
     try {
       await fetchAPI('/reportes', { method: 'POST', body: JSON.stringify(body) });
       setEnviado(true);
-    } catch {
-      enqueue(body);
-      setEnviado(true);
+    } catch (err) {
+      if (err instanceof TypeError) {
+        // Sin red: se guarda y se envía al volver la conexión.
+        enqueue(body);
+        setEnviado(true);
+      } else {
+        // El servidor lo rechazó (fuera del área, demasiados reportes,
+        // dispositivo bloqueado): reintentar no sirve, hay que avisar.
+        setError(mensajeDelServidor(err) ?? 'No se pudo enviar el reporte. Intenta de nuevo.');
+      }
     } finally {
       setEnviando(false);
     }

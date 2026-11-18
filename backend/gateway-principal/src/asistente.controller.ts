@@ -2,7 +2,7 @@ import { Controller, Post, Body, Inject, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { TCP_PATTERNS } from '@ojo-camba/common';
 import { sendRpc } from './rpc.helper';
-import { BackofficeGuard } from './ai-access.guard';
+import { RequireRoles, ROLES_GESTION, RolesGuard } from './roles.guard';
 
 export interface TurnoHistorial {
   role: 'user' | 'assistant';
@@ -21,7 +21,9 @@ export interface AsistenteChatRespuesta {
 }
 
 @Controller('asistente')
-@UseGuards(BackofficeGuard)
+// El botón del asistente aparece para todos los roles del Back Office.
+@UseGuards(RolesGuard)
+@RequireRoles(...ROLES_GESTION)
 export class AsistenteController {
   constructor(@Inject('MS_IA') private readonly client: ClientProxy) {}
 

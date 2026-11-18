@@ -7,11 +7,15 @@ import { of } from 'rxjs';
 import { AdminController } from './admin.controller';
 import { AuthController } from './auth.controller';
 import { GamifyController } from './gamify.controller';
+import { IaController } from './ia.controller';
+import { AiConfigurationController } from './ai-configuration.controller';
+import { AsistenteController } from './asistente.controller';
 import { ReportesController } from './reportes.controller';
 import { EventsGateway } from './events/events.gateway';
 import {
   exigirPropioOGestion,
   OptionalAuthGuard,
+  ROLES_GESTION,
   ROLES_REQUERIDOS,
   TokenValidation,
 } from './roles.guard';
@@ -189,5 +193,28 @@ describe('La identidad sale del token, no del cuerpo', () => {
     await controlador.logout(sesion);
 
     expect(send).toHaveBeenCalledWith(TCP_PATTERNS.AUTH.LOGOUT, { user_id: 7 });
+  });
+});
+
+describe('Rutas de IA: el rol coincide con la pantalla que las usa', () => {
+  const rolesDeRuta = (controlador: Controlador, metodo: string): string[] =>
+    (Reflect.getMetadata(ROLES_REQUERIDOS, (controlador.prototype as never)[metodo]) as string[]) ??
+    (Reflect.getMetadata(ROLES_REQUERIDOS, controlador) as string[]);
+
+  it('triaje y análisis de foto son de la bandeja de moderación', () => {
+    expect(rolesDeRuta(IaController, 'inferirTriaje')).toEqual([ROLES.BACKOFFICE]);
+    expect(rolesDeRuta(IaController, 'sugerirHechos')).toEqual([ROLES.BACKOFFICE]);
+  });
+
+  it('la recomendación de cuadrilla es del coordinador operativo', () => {
+    expect(rolesDeRuta(IaController, 'recomendarCuadrilla')).toEqual([ROLES.COORDINADOR_OPERATIVO]);
+  });
+
+  it('la configuración de proveedores es solo del encargado de IT', () => {
+    expect(rolesDeRuta(AiConfigurationController, 'listProviders')).toEqual([ROLES.ENCARGADO_IT]);
+  });
+
+  it('el asistente está disponible para todos los roles de gestión', () => {
+    expect(rolesDeRuta(AsistenteController, 'chat')).toEqual(ROLES_GESTION);
   });
 });

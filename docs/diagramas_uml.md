@@ -192,7 +192,7 @@ flowchart TD
     subgraph MS_Register["⚙️ MS Registro NestJS"]
         C1[Recibe payload via TCP]
         C2{¿Imagen válida?}
-        C3[Sube imagen a MinIO]
+        C3[Sube imagen a SeaweedFS]
         C4[Calcula H3 res 8, 11, 13]
         C5[Persiste reporte en PostgreSQL]
         C6[Estado inicial: Reportado]

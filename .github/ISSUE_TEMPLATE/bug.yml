@@ -18,7 +18,7 @@ body:
         - "app-tecnico"
         - "app-status"
         - "Base de datos / PostGIS"
-        - "MinIO"
+        - "Almacenamiento de imágenes (SeaweedFS)"
         - "Infraestructura / Docker"
     validations:
       required: true

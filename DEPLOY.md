@@ -6,7 +6,7 @@
 # Instalar dependencias de todo el monorepo
 pnpm install
 
-# Levantar PostgreSQL + MinIO (infra local)
+# Levantar PostgreSQL + SeaweedFS (infra local)
 pnpm docker:up
 
 # Detener infra local
@@ -15,8 +15,12 @@ pnpm docker:down
 # Iniciar todos los servicios backend en modo watch (requiere infra activa)
 pnpm dev
 
+# ms-prediccion (Python) no entra en `pnpm dev`: se levanta aparte con Docker
+pnpm dev:prediccion            # Ctrl+C para detenerlo
+pnpm dev:prediccion:entrenar   # entrenar el modelo, la primera vez
+
 # En otra terminal, verificar que todo responde
-pnpm ping
+pnpm health
 ```
 
 ---
@@ -26,7 +30,7 @@ pnpm ping
 ### Prerrequisitos
 
 - PostgreSQL 16 + PostGIS (servicio Coolify o externo)
-- MinIO (servicio Coolify o externo)
+- SeaweedFS u otro almacenamiento compatible con S3 (servicio Coolify o externo)
 - Repositorio Git conectado a Coolify
 - Rama a desplegar configurada
 
@@ -336,7 +340,7 @@ Watch Paths:
 ### Orden de despliegue
 
 1. PostgreSQL + PostGIS
-2. MinIO
+2. SeaweedFS (almacenamiento S3)
 3. `ms-auth` `ms-register` `ms-admin` `ms-gamify` (cualquier orden)
 4. `gateway-principal` `gateway-status` (después de los MS)
 5. `app-reporte` `app-backoffice` `app-tecnico` `app-status` (cualquier orden)
@@ -384,7 +388,7 @@ Si se ejecuta desde la terminal del contenedor `ms-auth` ya desplegado, usá
 `node dist/bootstrap-production.js` con las mismas variables de entorno.
 
 Conservá el mismo `AI_CONFIG_ENCRYPTION_KEY` y cargá los proveedores desde **Backoffice → IA y
-respaldos**. El reset de PostgreSQL no borra objetos en MinIO: limpiá el bucket `reportes` sólo
+respaldos**. El reset de PostgreSQL no borra objetos en SeaweedFS: limpiá el bucket `reportes` sólo
 después de tener su backup y confirmar que es exclusivo de esta aplicación.
 
 ### Verificación post-deploy

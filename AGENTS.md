@@ -2,7 +2,7 @@
 
 ## Qué es Ojo Camba
 
-Plataforma de reportes ciudadanos de infraestructura urbana para Santa Cruz de la Sierra, Bolivia. Microservicios NestJS + React PWA con PostgreSQL/PostGIS y MinIO.
+Plataforma de reportes ciudadanos de infraestructura urbana para Santa Cruz de la Sierra, Bolivia. Microservicios NestJS + React PWA con PostgreSQL/PostGIS y SeaweedFS.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Plataforma de reportes ciudadanos de infraestructura urbana para Santa Cruz de l
 | Backend | NestJS 11 (microservicios TCP) |
 | Frontend | React 18 + Vite 6 + Tailwind v4 |
 | BD | PostgreSQL 16 + PostGIS + h3-pg |
-| Objetos | MinIO (S3-compatible) |
+| Objetos | SeaweedFS (S3-compatible) |
 | PWA | vite-plugin-pwa + Workbox |
 
 ## Estructura

@@ -1,6 +1,6 @@
 # Arquitectura del Sistema: Ojo Camba
 
-**Descripción:** Este documento detalla la arquitectura de software del sistema Ojo Camba. Define la separación de responsabilidades entre las aplicaciones cliente (Frontends), la capa de enrutamiento (API Gateways), los microservicios backend basados en NestJS y la capa de persistencia de datos (PostgreSQL + MinIO). La comunicación interna prioriza el protocolo TCP para garantizar baja latencia y alto rendimiento.
+**Descripción:** Este documento detalla la arquitectura de software del sistema Ojo Camba. Define la separación de responsabilidades entre las aplicaciones cliente (Frontends), la capa de enrutamiento (API Gateways), los microservicios backend basados en NestJS y la capa de persistencia de datos (PostgreSQL + SeaweedFS). La comunicación interna prioriza el protocolo TCP para garantizar baja latencia y alto rendimiento.
 
 ## Diagrama de Arquitectura General
 
@@ -47,10 +47,10 @@ graph TD
 
     subgraph Almacenamiento
         DB[(PostgreSQL + PostGIS)]
-        MinIO[(MinIO Object Storage)]
+        SeaweedFS[(SeaweedFS · almacenamiento S3)]
     end
 
-    MS_Register -->|Sube Imagen| MinIO
+    MS_Register -->|Sube Imagen| SeaweedFS
     MS_Register -->|CRUD H3| DB
     MS_Auth --> DB
     MS_Admin --> DB

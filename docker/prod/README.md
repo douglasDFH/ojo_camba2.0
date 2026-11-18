@@ -3,7 +3,7 @@
 ## Desarrollo Local
 
 ```bash
-# Levantar infraestructura (PostgreSQL + MinIO)
+# Levantar infraestructura (PostgreSQL + SeaweedFS)
 docker compose -f docker/dev/docker-compose.yml up -d
 
 # Detener
@@ -21,7 +21,7 @@ pnpm docker:down
 ### Prerrequisitos
 
 - Servidor con Coolify instalado
-- Stack de infra levantado (`docker-compose.infra.yml`) con PostgreSQL 16 + PostGIS y MinIO. La
+- Stack de infra levantado (`docker-compose.infra.yml`) con PostgreSQL 16 + PostGIS y SeaweedFS. La
   extensión `h3-pg` es opcional: la aplicación calcula las celdas con `h3-js`.
 - Repositorio Git conectado a Coolify
 - Rama a desplegar configurada (`main`)
@@ -312,7 +312,7 @@ Watch Paths:
 
 ### Orden de despliegue
 
-1. Stack infra (`docker-compose.infra.yml`) → PostgreSQL + MinIO
+1. Stack infra (`docker-compose.infra.yml`) → PostgreSQL + SeaweedFS
 2. `ms-auth`
 3. `ms-register`
 4. `ms-admin`

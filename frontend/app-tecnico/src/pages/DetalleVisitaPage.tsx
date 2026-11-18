@@ -1,11 +1,14 @@
-import { ArrowLeft, Camera, MapPin, UsersRound } from 'lucide-react';
+import { ArrowLeft, Camera, CheckCircle2, MapPin, NotebookPen, UsersRound } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getImageUrl } from '../lib/api';
 import { getVisita, registrarLlegadaVisita, type DetalleVisita } from '../lib/tecnicoApi';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { friendlyError } from '../lib/errors';
 import StatusBadge from '../components/StatusBadge';
+import BitacoraVisita from '../components/BitacoraVisita';
+import ResultadoVisita from '../components/ResultadoVisita';
+import RutaSugerida from '../components/RutaSugerida';
 
 export default function DetalleVisitaPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,25 +16,26 @@ export default function DetalleVisitaPage() {
   const [detalle, setDetalle] = useState<DetalleVisita | null>(null);
   const [error, setError] = useState('');
   const [enviandoLlegada, setEnviandoLlegada] = useState(false);
+  const [aviso, setAviso] = useState('');
   const gps = useGeolocation();
 
-  useEffect(() => {
+  const cargar = useCallback(() => {
     if (!Number.isInteger(visitaId)) return;
     getVisita(visitaId)
       .then(setDetalle)
       .catch((err) => setError(friendlyError(err)));
   }, [visitaId]);
 
+  useEffect(cargar, [cargar]);
+
   const confirmarLlegada = async () => {
     try {
+      setError('');
       setEnviandoLlegada(true);
       const fix = await gps.capture();
       await registrarLlegadaVisita(visitaId, fix.lat, fix.lng);
-      setDetalle((actual) =>
-        actual
-          ? { ...actual, visita: { ...actual.visita, llegada_en: new Date().toISOString() } }
-          : actual,
-      );
+      // Recargar: la llegada puede pasar el caso a ValidacionCampo.
+      cargar();
     } catch (err) {
       setError(friendlyError(err));
     } finally {
@@ -49,8 +53,12 @@ export default function DetalleVisitaPage() {
       </p>
     );
 
+  const { visita, caso } = detalle;
+  const cerrada = Boolean(visita.cerrada_en);
+  const llego = Boolean(visita.llegada_en);
+
   return (
-    <div className="space-y-5 pb-24">
+    <div className="space-y-5 pb-28">
       <Link
         to="/mis-obras"
         className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-caoba"
@@ -63,15 +71,62 @@ export default function DetalleVisitaPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-ladrillo">
               Caso de Obra
             </p>
-            <h1 className="mt-1 text-xl font-semibold text-catedral">{detalle.caso.codigo_obra}</h1>
+            <h1 className="mt-1 text-xl font-semibold text-catedral">{caso.codigo_obra}</h1>
           </div>
-          <StatusBadge estado={detalle.caso.estado_actual} />
+          <StatusBadge estado={caso.estado_actual} />
         </div>
         <div className="mt-4 flex items-center gap-2 text-sm text-arena">
           <UsersRound className="h-4 w-4" />
           {detalle.agrupacion.total_reportes} reportes ciudadanos agrupados
         </div>
+        {visita.fecha_planificada && (
+          <p className="mt-2 text-sm text-arena">
+            Visita planificada para el {visita.fecha_planificada}
+            {visita.orden_ruta ? ` · parada ${visita.orden_ruta}` : ''}
+          </p>
+        )}
       </section>
+
+      {aviso && (
+        <p
+          role="status"
+          className="flex items-start gap-2 rounded-2xl bg-green-50 p-4 text-sm text-green-800"
+        >
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> {aviso}
+        </p>
+      )}
+
+      {cerrada ? (
+        <section className="rounded-3xl-3 bg-perla p-5 text-sm text-arena shadow-sm">
+          Esta visita está cerrada. Si el caso necesita otra, aparecerá en Mis obras cuando tu
+          responsable la planifique.
+        </section>
+      ) : (
+        llego && (
+          <>
+            <section className="rounded-3xl-3 bg-perla p-5 shadow-sm">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-tierra">
+                <NotebookPen className="h-4 w-4" /> Bitácora de obra
+              </h2>
+              <p className="mt-1 text-xs text-arena">
+                Registra avances, fotos o materiales que necesitas. No cambia el estado del caso.
+              </p>
+              <BitacoraVisita grupoId={caso.id} onGuardado={() => setAviso('Avance agregado.')} />
+            </section>
+            <section className="rounded-3xl-3 bg-perla p-5 shadow-sm">
+              <h2 className="text-sm font-semibold text-tierra">Resultado de la visita</h2>
+              <ResultadoVisita
+                visitaId={visita.id}
+                estadoCaso={caso.estado_actual}
+                onEnviado={(mensaje) => {
+                  setAviso(mensaje);
+                  cargar();
+                }}
+              />
+            </section>
+          </>
+        )
+      )}
 
       <section className="rounded-3xl-3 bg-perla p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-tierra">Reportes que originaron esta obra</h2>
@@ -80,7 +135,12 @@ export default function DetalleVisitaPage() {
             <li key={reporte.id} className="flex gap-3 rounded-3xl-2 bg-lienzo p-3">
               {reporte.url_imagen ? (
                 <img
-                  src={getImageUrl(reporte.url_imagen)}
+                  // url_imagen guarda la clave de S3; la foto se sirve por el gateway.
+                  src={
+                    reporte.url_imagen.startsWith('http')
+                      ? reporte.url_imagen
+                      : getImageUrl(`/reportes/${reporte.id}/imagen`)
+                  }
                   alt={`Evidencia del reporte ${reporte.id}`}
                   className="h-16 w-16 rounded-2xl object-cover"
                 />
@@ -103,28 +163,28 @@ export default function DetalleVisitaPage() {
         </ul>
       </section>
 
+      {detalle.agrupacion.total_reportes > 1 && <RutaSugerida grupoId={caso.id} />}
+
       {error && (
         <p role="alert" className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">
           {error}
         </p>
       )}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-arcilla bg-perla p-4">
-        <div className="mx-auto max-w-sm">
-          <button
-            type="button"
-            disabled={Boolean(detalle.visita.llegada_en) || enviandoLlegada}
-            onClick={confirmarLlegada}
-            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-selva px-6 text-sm font-semibold text-perla shadow-md disabled:opacity-60"
-          >
-            <MapPin className="h-5 w-5" />
-            {detalle.visita.llegada_en
-              ? 'Llegada registrada'
-              : enviandoLlegada
-                ? 'Obteniendo GPS…'
-                : 'Registrar llegada'}
-          </button>
+      {!cerrada && !llego && (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-arcilla bg-perla p-4">
+          <div className="mx-auto max-w-sm">
+            <button
+              type="button"
+              disabled={enviandoLlegada}
+              onClick={confirmarLlegada}
+              className="flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-selva px-6 text-sm font-semibold text-perla shadow-md disabled:opacity-60"
+            >
+              <MapPin className="h-5 w-5" />
+              {enviandoLlegada ? 'Obteniendo GPS…' : 'Registrar llegada'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

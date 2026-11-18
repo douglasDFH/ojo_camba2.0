@@ -17,7 +17,7 @@ import { ROLES, TCP_PATTERNS } from '@ojo-camba/common';
 import { sendRpc } from './rpc.helper';
 import { EventsGateway } from './events/events.gateway';
 import { BackofficeGuard } from './ai-access.guard';
-import { RequireRoles, RolesGuard } from './roles.guard';
+import { RequireRoles, ROLES_GESTION, RolesGuard, type TokenValidation } from './roles.guard';
 import type { FastifyReply } from 'fastify';
 
 @Controller('admin')
@@ -28,6 +28,8 @@ export class AdminController {
   ) {}
 
   @Get('reports/nearby')
+  @UseGuards(RolesGuard)
+  @RequireRoles(ROLES.BACKOFFICE, ROLES.COORDINADOR_OPERATIVO)
   listNearbyReports(
     @Query('lat') lat: string,
     @Query('lng') lng: string,
@@ -45,6 +47,8 @@ export class AdminController {
   }
 
   @Get('groups/nearby')
+  @UseGuards(RolesGuard)
+  @RequireRoles(...ROLES_GESTION, ROLES.TECNICO)
   listNearbyGroups(
     @Query('lat') lat: string,
     @Query('lng') lng: string,
@@ -166,11 +170,13 @@ export class AdminController {
   }
 
   @Post('groups/:id/updates')
+  @UseGuards(RolesGuard)
+  @RequireRoles(ROLES.BACKOFFICE, ROLES.COORDINADOR_OPERATIVO)
   updateCase(
+    @Req() request: { user: TokenValidation },
     @Param('id') id: string,
     @Body()
     dto: {
-      usuario_id: number;
       comentario: string;
       estado_nuevo?: string;
       recursos_solicitados?: string;
@@ -182,18 +188,24 @@ export class AdminController {
   ) {
     return sendRpc(
       this.client.send(TCP_PATTERNS.ADMIN.UPDATE_CASE, {
-        grupo_id: parseInt(id, 10),
         ...dto,
+        grupo_id: parseInt(id, 10),
+        // El autor de la bitácora es quien firma el token, no un id del cuerpo.
+        usuario_id: request.user.user_id,
       }),
     );
   }
 
   @Post('devices/ban')
+  @UseGuards(RolesGuard)
+  @RequireRoles(ROLES.BACKOFFICE, ROLES.ENCARGADO_IT)
   banDevice(@Body() dto: { device_id: string; motivo?: string }) {
     return sendRpc(this.client.send(TCP_PATTERNS.ADMIN.BAN_DEVICE, dto));
   }
 
   @Post('devices/unban')
+  @UseGuards(RolesGuard)
+  @RequireRoles(ROLES.BACKOFFICE, ROLES.ENCARGADO_IT)
   unbanDevice(@Body() dto: { device_id: string }) {
     return sendRpc(this.client.send(TCP_PATTERNS.ADMIN.UNBAN_DEVICE, dto));
   }
@@ -232,6 +244,8 @@ export class AdminController {
   }
 
   @Get('groups')
+  @UseGuards(RolesGuard)
+  @RequireRoles(...ROLES_GESTION)
   listGroups(
     @Query()
     query: {
@@ -270,6 +284,8 @@ export class AdminController {
   }
 
   @Get('groups/:id/reports')
+  @UseGuards(RolesGuard)
+  @RequireRoles(...ROLES_GESTION, ROLES.TECNICO)
   listGroupReports(@Param('id') id: string) {
     return sendRpc(
       this.client.send(TCP_PATTERNS.ADMIN.LIST_GROUP_REPORTS, {
@@ -279,11 +295,15 @@ export class AdminController {
   }
 
   @Get('dashboard')
+  @UseGuards(RolesGuard)
+  @RequireRoles(...ROLES_GESTION)
   getDashboard() {
     return sendRpc(this.client.send(TCP_PATTERNS.ADMIN.DASHBOARD, {}));
   }
 
   @Get('dashboard/kpis')
+  @UseGuards(RolesGuard)
+  @RequireRoles(...ROLES_GESTION)
   getDashboardKpis(
     @Query('desde') desde?: string,
     @Query('hasta') hasta?: string,
@@ -307,11 +327,15 @@ export class AdminController {
   }
 
   @Get('especialidades')
+  @UseGuards(RolesGuard)
+  @RequireRoles(...ROLES_GESTION)
   listEspecialidades() {
     return sendRpc(this.client.send(TCP_PATTERNS.ADMIN.LIST_ESPECIALIDADES, {}));
   }
 
   @Get('cuadrillas')
+  @UseGuards(RolesGuard)
+  @RequireRoles(...ROLES_GESTION)
   listCuadrillas(@Query('solo_activas') soloActivas?: string) {
     return sendRpc(
       this.client.send(TCP_PATTERNS.ADMIN.LIST_CUADRILLAS, {
@@ -343,20 +367,25 @@ export class AdminController {
   }
 
   @Post('groups/:id/cuadrilla')
+  @UseGuards(RolesGuard)
+  @RequireRoles(ROLES.COORDINADOR_OPERATIVO)
   asignarCuadrilla(
+    @Req() request: { user: TokenValidation },
     @Param('id') id: string,
-    @Body() dto: { cuadrilla_id: number | null; usuario_id: number },
+    @Body() dto: { cuadrilla_id: number | null },
   ) {
     return sendRpc(
       this.client.send(TCP_PATTERNS.ADMIN.ASIGNAR_CUADRILLA, {
         grupo_id: parseInt(id, 10),
         cuadrilla_id: dto.cuadrilla_id,
-        usuario_id: dto.usuario_id,
+        usuario_id: request.user.user_id,
       }),
     );
   }
 
   @Get('devices')
+  @UseGuards(RolesGuard)
+  @RequireRoles(ROLES.BACKOFFICE, ROLES.ENCARGADO_IT)
   listDevices(@Query() query: { page?: string; limit?: string; banned_only?: string }) {
     return sendRpc(
       this.client.send(TCP_PATTERNS.ADMIN.LIST_DEVICES, {

@@ -1,3 +1,4 @@
+import { authHeaders } from './api';
 const QUEUE_KEY = 'ojo_camba_offline_queue';
 
 interface QueuedReporte {
@@ -22,12 +23,8 @@ export function getQueue(): QueuedReporte[] {
 
 export function enqueue(reporte: Omit<QueuedReporte, 'createdAt'>) {
   const queue = getQueue();
-  const compressed = {
-    ...reporte,
-    imagen_base64: compressImage(reporte.imagen_base64),
-    createdAt: Date.now(),
-  };
-  queue.push(compressed);
+  // La foto ya llega comprimida desde la cámara (lib/imagen.ts).
+  queue.push({ ...reporte, createdAt: Date.now() });
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 
@@ -46,39 +43,27 @@ export async function flush(baseUrl: string) {
     try {
       const res = await fetch(`${baseUrl}/reportes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // El autor sale del token vigente al enviar; el usuario_id guardado en la
+        // cola ya no se usa (el gateway lo ignora).
+        headers: authHeaders(),
         body: JSON.stringify(queue[i]),
       });
       if (res.ok) {
         removeQueued(i);
         success++;
+      } else if (
+        res.status >= 400 &&
+        res.status < 500 &&
+        res.status !== 408 &&
+        res.status !== 429
+      ) {
+        // Rechazo definitivo (fuera del área, dispositivo bloqueado, foto
+        // inválida): reintentar no lo arregla y bloquearía la cola para siempre.
+        removeQueued(i);
       }
     } catch {
       break;
     }
   }
   return success;
-}
-
-function compressImage(base64: string): string {
-  const match = base64.match(/^data:image\/(\w+);base64,(.+)$/);
-  if (!match) return base64;
-
-  const bin = atob(match[2]);
-  if (bin.length < 500000) return base64;
-
-  try {
-    const canvas = document.createElement('canvas');
-    const img = new Image();
-    const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
-    img.src = base64;
-    canvas.width = Math.min(800, img.width || 800);
-    canvas.height = Math.round((canvas.width / (img.width || 800)) * (img.height || 600));
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return base64;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL(`image/${ext}`, 0.6);
-  } catch {
-    return base64;
-  }
 }

@@ -9,7 +9,6 @@
     "seed": "ts-node -r tsconfig-paths/register src/simulador-historico/execute.ts",
     "seed:historico": "ts-node -r tsconfig-paths/register src/simulador-historico/execute.ts",
     "seed:historical": "pnpm run seed:historico",
-    "sync": "ts-node src/sync.ts",
     "lint": "eslint \"{src,test}/**/*.ts\" --ext .ts",
     "test": "jest"
   },

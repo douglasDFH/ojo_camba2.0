@@ -14,6 +14,10 @@ export default defineConfig({
       '@ojo-camba/common/motor/ruta': fileURLToPath(
         new URL('../../libs/common/src/motor/ruta.ts', import.meta.url),
       ),
+      // Mismo flujo de estados que valida ms-admin, sin copiarlo en el frontend.
+      '@ojo-camba/common/estado-caso': fileURLToPath(
+        new URL('../../libs/common/src/enums/estado-caso.enum.ts', import.meta.url),
+      ),
     },
   },
   plugins: [

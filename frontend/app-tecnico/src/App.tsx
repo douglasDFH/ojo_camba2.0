@@ -6,6 +6,7 @@ import InicioOperativoPage from './pages/InicioOperativoPage';
 import MisObrasPage from './pages/MisObrasPage';
 import MiRutaPage from './pages/MiRutaPage';
 import DetalleVisitaPage from './pages/DetalleVisitaPage';
+import CuadrillaPage from './pages/CuadrillaPage';
 import { OperacionProvider } from './components/OperacionProvider';
 
 function NotFound() {
@@ -28,6 +29,7 @@ export default function App() {
                     <Route path="/mis-obras" element={<MisObrasPage />} />
                     <Route path="/mi-ruta" element={<MiRutaPage />} />
                     <Route path="/visitas/:id" element={<DetalleVisitaPage />} />
+                    <Route path="/cuadrilla" element={<CuadrillaPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Layout>

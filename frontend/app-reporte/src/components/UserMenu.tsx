@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, FileText, LogOut, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { fetchAPI } from '../lib/api';
 
 export default function UserMenu() {
   const { user, logout } = useAuthStore();
@@ -18,11 +19,7 @@ export default function UserMenu() {
 
   const handleLogout = async () => {
     if (user) {
-      await fetch('/auth/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id }),
-      }).catch(() => {});
+      await fetchAPI('/auth/logout', { method: 'POST' }).catch(() => {});
     }
     logout();
     setOpen(false);

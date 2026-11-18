@@ -1,0 +1,31 @@
+# ms-prediccion para desarrollo local (issue #4).
+#
+# `pnpm dev` levanta los servicios Node, pero ms-prediccion es Python (pandas y
+# scikit-learn) y no tiene script `dev`: sin él, el Panel de decisión del Back
+# Office responde 503. Este compose lo levanta en Docker contra la base de
+# `pnpm docker:up` y expone el puerto 3007 al equipo, que es donde lo busca el
+# gateway-principal local (MS_PREDICCION_HOST=localhost, MS_PREDICCION_PORT=3007).
+#
+#   pnpm dev:prediccion            levanta el servicio (Ctrl+C para detenerlo)
+#   pnpm dev:prediccion:entrenar   entrena el modelo (no corre al arrancar, a propósito)
+name: ojo-camba-prediccion
+
+services:
+  ms-prediccion:
+    build:
+      context: ../../backend/ms-prediccion
+      dockerfile: Dockerfile
+    ports:
+      - '3007:3007'
+    volumes:
+      - ../../backend/ms-prediccion/app:/app/app
+      # El modelo entrenado y el caché de clima sobreviven al rebuild.
+      - ../../backend/ms-prediccion/modelos:/app/modelos
+      - ../../backend/ms-prediccion/datos:/app/datos
+    environment:
+      # Postgres de `pnpm docker:up` publicado en el puerto 5432 del equipo.
+      DATABASE_URL: postgresql+psycopg://ojocamba:ojocamba_secret@host.docker.internal:5432/ojocamba
+      ENTRENAR_AL_INICIAR: 'false'
+    # En Linux host.docker.internal no existe por defecto.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

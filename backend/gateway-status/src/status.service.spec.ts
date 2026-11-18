@@ -1,5 +1,5 @@
 import { of, throwError } from 'rxjs';
-import { StatusService } from './status.service';
+import { diasRetencionPingLog, StatusService } from './status.service';
 
 function makeClient(behavior: 'ok' | 'down') {
   return {
@@ -26,6 +26,41 @@ function makeHistoryRepo(rawRows: Record<string, unknown>[]) {
   };
   return { createQueryBuilder: jest.fn(() => qb) };
 }
+
+describe('StatusService — retención de ping_log (issue #4)', () => {
+  const crear = (repo: unknown) =>
+    new StatusService(
+      makeClient('ok') as never,
+      makeClient('ok') as never,
+      makeClient('ok') as never,
+      makeClient('ok') as never,
+      makeClient('ok') as never,
+      repo as never,
+    );
+
+  it('borra solo lo anterior a 90 días, el máximo del historial de la App Status', async () => {
+    const repo = { ...makePingLogRepo(), delete: jest.fn().mockResolvedValue({ affected: 42 }) };
+    const ahora = new Date('2026-11-17T12:00:00Z');
+
+    await expect(crear(repo).purgarHistorialAntiguo(ahora)).resolves.toBe(42);
+
+    const limite = (repo.delete.mock.calls[0][0] as { creado_en: { value: Date } }).creado_en.value;
+    expect(limite.toISOString()).toBe('2026-08-19T12:00:00.000Z');
+  });
+
+  it('nunca retiene menos que el historial visible, aunque se configure menos', () => {
+    expect(diasRetencionPingLog({ PING_LOG_RETENCION_DIAS: '7' })).toBe(90);
+    expect(diasRetencionPingLog({ PING_LOG_RETENCION_DIAS: '180' })).toBe(180);
+  });
+
+  it('un fallo al purgar no tumba el servicio', async () => {
+    const repo = {
+      ...makePingLogRepo(),
+      delete: jest.fn().mockRejectedValue(new Error('db caida')),
+    };
+    await expect(crear(repo).purgarHistorialAntiguo()).resolves.toBe(0);
+  });
+});
 
 describe('StatusService — agregacion de ping (ISSUE-20)', () => {
   it('reporta status global "ok" cuando los 5 microservicios responden', async () => {

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ClipboardList, HardHat, Home, LogOut, Navigation } from 'lucide-react';
+import { ClipboardList, HardHat, Home, LogOut, Navigation, Users } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useOperacionContext } from './OperacionProvider';
 
@@ -21,6 +21,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         { to: '/', label: 'Inicio', icon: Home },
         { to: '/mis-obras', label: 'Obras', icon: ClipboardList },
         { to: '/mi-ruta', label: 'Ruta', icon: Navigation },
+        // Solo el responsable reparte visitas y decide propuestas.
+        ...(contexto?.es_responsable
+          ? [{ to: '/cuadrilla', label: 'Cuadrilla', icon: Users }]
+          : []),
       ];
 
   return (

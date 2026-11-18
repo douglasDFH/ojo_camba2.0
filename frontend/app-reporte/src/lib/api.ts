@@ -1,4 +1,33 @@
+import { getToken } from './auth';
+
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+
+/**
+ * Cabeceras comunes: el token si el ciudadano inició sesión y, solo cuando la
+ * petición lleva cuerpo, Content-Type JSON (Fastify rechaza con 400 un
+ * application/json vacío, por ejemplo en POST /auth/logout).
+ */
+export function authHeaders(conCuerpo = true): Record<string, string> {
+  const token = getToken();
+  return {
+    ...(conCuerpo ? { 'Content-Type': 'application/json' } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+/**
+ * Mensaje que devolvió el servidor (el gateway responde JSON con "message").
+ * Si no hay uno legible, devuelve null para usar un texto genérico.
+ */
+export function mensajeDelServidor(err: unknown): string | null {
+  if (!(err instanceof Error)) return null;
+  try {
+    const cuerpo = JSON.parse(err.message) as { message?: unknown };
+    return typeof cuerpo.message === 'string' ? cuerpo.message : null;
+  } catch {
+    return null;
+  }
+}
 
 export function getImageUrl(url_imagen: string | null): string {
   if (!url_imagen) return '';
@@ -8,8 +37,11 @@ export function getImageUrl(url_imagen: string | null): string {
 
 export async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: {
+      ...authHeaders(options?.body !== undefined),
+      ...(options?.headers as Record<string, string> | undefined),
+    },
   });
   if (!res.ok) {
     const text = await res.text();

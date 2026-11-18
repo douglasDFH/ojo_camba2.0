@@ -1,3 +1,4 @@
+import { S3Client } from '@aws-sdk/client-s3';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
@@ -38,6 +39,7 @@ describe('OperacionService', () => {
   let visitaRepo: ReturnType<typeof repoMock>;
   let grupoRepo: ReturnType<typeof repoMock>;
   let propuestaRepo: ReturnType<typeof repoMock>;
+  let usuarioRepo: ReturnType<typeof repoMock>;
 
   beforeEach(async () => {
     configRepo = repoMock();
@@ -49,6 +51,9 @@ describe('OperacionService', () => {
     visitaRepo = repoMock();
     grupoRepo = repoMock();
     propuestaRepo = repoMock();
+    usuarioRepo = repoMock();
+    // El servicio llega a la tabla de usuarios por el manager de usuario_roles.
+    Object.assign(usuarioRolRepo, { manager: { getRepository: () => usuarioRepo } });
     const modulo = await Test.createTestingModule({
       providers: [
         OperacionService,
@@ -222,7 +227,14 @@ describe('OperacionService', () => {
   });
 
   it('el técnico asignado propone finalización con evidencia, sin cerrar el Caso por sí mismo', async () => {
-    visitaRepo.findOne.mockResolvedValue({ id: 8, grupo_id: 14, tecnico_id: 9, cerrada_en: null });
+    visitaRepo.findOne.mockResolvedValue({
+      id: 8,
+      grupo_id: 14,
+      cuadrilla_id: 3,
+      tecnico_id: 9,
+      llegada_en: new Date(),
+      cerrada_en: null,
+    });
     propuestaRepo.save.mockImplementation((value) => Promise.resolve({ id: 25, ...value }));
 
     const propuesta = await service.proponerResultadoVisita({
@@ -238,7 +250,14 @@ describe('OperacionService', () => {
   });
 
   it('rechaza una propuesta terminal sin evidencia', async () => {
-    visitaRepo.findOne.mockResolvedValue({ id: 8, grupo_id: 14, tecnico_id: 9, cerrada_en: null });
+    visitaRepo.findOne.mockResolvedValue({
+      id: 8,
+      grupo_id: 14,
+      cuadrilla_id: 3,
+      tecnico_id: 9,
+      llegada_en: new Date(),
+      cerrada_en: null,
+    });
 
     await expect(
       service.proponerResultadoVisita({
@@ -251,7 +270,14 @@ describe('OperacionService', () => {
   });
 
   it('aplica EnTrabajo como resultado no terminal sin enviarlo a confirmación', async () => {
-    visitaRepo.findOne.mockResolvedValue({ id: 8, grupo_id: 14, tecnico_id: 9, cerrada_en: null });
+    visitaRepo.findOne.mockResolvedValue({
+      id: 8,
+      grupo_id: 14,
+      cuadrilla_id: 3,
+      tecnico_id: 9,
+      llegada_en: new Date(),
+      cerrada_en: null,
+    });
     grupoRepo.findOne.mockResolvedValue({ id: 14, estado_actual: EstadoCaso.ValidacionCampo });
 
     await expect(
@@ -265,6 +291,10 @@ describe('OperacionService', () => {
     expect(propuestaRepo.save).not.toHaveBeenCalled();
     expect(grupoRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({ estado_actual: EstadoCaso.EnTrabajo }),
+    );
+    // Seguimiento de obra: nueva visita abierta para el mismo técnico.
+    expect(visitaRepo.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({ grupo_id: 14, cuadrilla_id: 3, tecnico_id: 9, cerrada_en: null }),
     );
   });
 
@@ -311,5 +341,227 @@ describe('OperacionService', () => {
         data: [expect.objectContaining({ caso: expect.objectContaining({ id: 14 }) })],
       }),
     );
+  });
+  describe('flujo de campo (issue #2)', () => {
+    const visitaAbierta = (extra: Record<string, unknown> = {}) => ({
+      id: 8,
+      grupo_id: 14,
+      cuadrilla_id: 3,
+      tecnico_id: 9,
+      llegada_en: null,
+      cerrada_en: null,
+      ...extra,
+    });
+
+    it('la llegada pasa el caso de PlanificadoVisita a ValidacionCampo y lo deja en la bitácora', async () => {
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta());
+      grupoRepo.findOne.mockResolvedValue({ id: 14, estado_actual: EstadoCaso.PlanificadoVisita });
+
+      await service.registrarLlegada({ visita_id: 8, tecnico_id: 9, lat: -17.78, lng: -63.18 });
+
+      expect(grupoRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ estado_actual: EstadoCaso.ValidacionCampo }),
+      );
+      expect(actualizacionRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estado_anterior: EstadoCaso.PlanificadoVisita,
+          estado_nuevo: EstadoCaso.ValidacionCampo,
+        }),
+      );
+    });
+
+    it('la llegada a una visita de seguimiento no cambia un caso EnTrabajo', async () => {
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta());
+      grupoRepo.findOne.mockResolvedValue({ id: 14, estado_actual: EstadoCaso.EnTrabajo });
+
+      await service.registrarLlegada({ visita_id: 8, tecnico_id: 9, lat: -17.78, lng: -63.18 });
+
+      expect(grupoRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('no registra dos veces la llegada de la misma visita', async () => {
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta({ llegada_en: new Date() }));
+
+      await expect(
+        service.registrarLlegada({ visita_id: 8, tecnico_id: 9, lat: -17.78, lng: -63.18 }),
+      ).rejects.toThrow('ya está registrada');
+    });
+
+    it('no acepta un resultado antes de registrar la llegada', async () => {
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta());
+
+      await expect(
+        service.proponerResultadoVisita({
+          visita_id: 8,
+          tecnico_id: 9,
+          estado_propuesto: EstadoCaso.EnTrabajo,
+          comentario: 'Falta material.',
+        }),
+      ).rejects.toThrow('Registra la llegada');
+    });
+
+    it('no acepta una segunda propuesta mientras otra espera decisión', async () => {
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta({ llegada_en: new Date() }));
+      propuestaRepo.findOne.mockResolvedValue({ id: 30, decision: 'Pendiente' });
+
+      await expect(
+        service.proponerResultadoVisita({
+          visita_id: 8,
+          tecnico_id: 9,
+          estado_propuesto: EstadoCaso.Finalizado,
+          comentario: 'Listo.',
+          evidencia_url: 'evidencias/a.jpg',
+        }),
+      ).rejects.toThrow('esperando decisión');
+    });
+
+    it('Reencolado devuelve el caso a la bandeja del responsable con una visita sin técnico', async () => {
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta({ llegada_en: new Date() }));
+      grupoRepo.findOne.mockResolvedValue({ id: 14, estado_actual: EstadoCaso.ValidacionCampo });
+
+      await service.proponerResultadoVisita({
+        visita_id: 8,
+        tecnico_id: 9,
+        estado_propuesto: EstadoCaso.Reencolado,
+        comentario: 'Zona inundada, no se puede trabajar hoy.',
+      });
+
+      expect(visitaRepo.save).toHaveBeenLastCalledWith(
+        expect.objectContaining({ grupo_id: 14, tecnico_id: null, cerrada_en: null }),
+      );
+    });
+
+    it('al repartir la visita de un caso reencolado, el caso vuelve a PlanificadoVisita', async () => {
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta({ tecnico_id: null }));
+      miembroRepo.findOne
+        .mockResolvedValueOnce({ usuario_id: 4, es_responsable: true })
+        .mockResolvedValueOnce({ usuario_id: 9, es_responsable: false });
+      grupoRepo.findOne.mockResolvedValue({ id: 14, estado_actual: EstadoCaso.Reencolado });
+
+      await service.asignarVisitaTecnico({
+        visita_id: 8,
+        responsable_id: 4,
+        tecnico_id: 9,
+        fecha_planificada: '2026-11-20',
+        orden_ruta: 1,
+      });
+
+      expect(grupoRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ estado_actual: EstadoCaso.PlanificadoVisita }),
+      );
+    });
+
+    it('sube la foto de evidencia a S3 y guarda solo la clave', async () => {
+      const s3 = jest.spyOn(S3Client.prototype, 'send').mockResolvedValue({} as never);
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta({ llegada_en: new Date() }));
+      propuestaRepo.findOne.mockResolvedValue(null);
+
+      await service.proponerResultadoVisita({
+        visita_id: 8,
+        tecnico_id: 9,
+        estado_propuesto: EstadoCaso.Finalizado,
+        comentario: 'Bache reparado.',
+        evidencia_url: 'data:image/jpeg;base64,AAAA',
+      });
+
+      expect(s3).toHaveBeenCalledTimes(1);
+      expect(propuestaRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ evidencia_url: expect.stringMatching(/^evidencias\/.+\.jpg$/) }),
+      );
+      s3.mockRestore();
+    });
+
+    it('el responsable descarta una propuesta con motivo y la visita sigue abierta', async () => {
+      propuestaRepo.findOne.mockResolvedValue({
+        id: 25,
+        visita_id: 8,
+        estado_propuesto: EstadoCaso.Finalizado,
+        decision: 'Pendiente',
+      });
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta({ llegada_en: new Date() }));
+      miembroRepo.findOne.mockResolvedValue({ usuario_id: 4, es_responsable: true });
+
+      await service.descartarPropuestaVisita({
+        propuesta_id: 25,
+        usuario_id: 4,
+        motivo_decision: 'La foto no muestra la tapa colocada.',
+      });
+
+      expect(propuestaRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ decision: 'Descartada', decidido_por_usuario_id: 4 }),
+      );
+      expect(visitaRepo.save).not.toHaveBeenCalled();
+      expect(grupoRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('descartar exige un motivo', async () => {
+      await expect(
+        service.descartarPropuestaVisita({ propuesta_id: 25, usuario_id: 4, motivo_decision: ' ' }),
+      ).rejects.toThrow('por qué se descarta');
+    });
+
+    it('un técnico que no es responsable no puede descartar la propuesta', async () => {
+      propuestaRepo.findOne.mockResolvedValue({
+        id: 25,
+        visita_id: 8,
+        estado_propuesto: EstadoCaso.Finalizado,
+        decision: 'Pendiente',
+      });
+      visitaRepo.findOne.mockResolvedValue(visitaAbierta({ llegada_en: new Date() }));
+      miembroRepo.findOne.mockResolvedValue({ usuario_id: 9, es_responsable: false });
+
+      await expect(
+        service.descartarPropuestaVisita({
+          propuesta_id: 25,
+          usuario_id: 9,
+          motivo_decision: 'No me gusta.',
+        }),
+      ).rejects.toThrow('Solo el responsable');
+    });
+
+    it('el responsable ve las propuestas pendientes de sus cuadrillas con el nombre del técnico', async () => {
+      miembroRepo.find.mockResolvedValue([
+        { cuadrilla_id: 3, usuario_id: 4, es_responsable: true },
+      ]);
+      visitaRepo.find
+        .mockResolvedValueOnce([{ id: 8, grupo_id: 14, cuadrilla_id: 3 }])
+        .mockResolvedValueOnce([{ id: 8, grupo_id: 14, cuadrilla_id: 3 }]);
+      propuestaRepo.find.mockResolvedValue([
+        { id: 25, visita_id: 8, propuesto_por_usuario_id: 9, estado_propuesto: 'Finalizado' },
+      ]);
+      grupoRepo.find.mockResolvedValue([{ id: 14, codigo_obra: 'O-26-0000014' }]);
+      usuarioRepo.find.mockResolvedValue([{ id: 9, nombre: 'Técnico Demo Uno' }]);
+
+      await expect(
+        service.propuestasPendientes({ usuario_id: 4, alcance: 'cuadrilla' }),
+      ).resolves.toEqual([
+        expect.objectContaining({
+          id: 25,
+          tecnico_nombre: 'Técnico Demo Uno',
+          caso: expect.objectContaining({ codigo_obra: 'O-26-0000014' }),
+        }),
+      ]);
+    });
+
+    it('la bandeja de reparto incluye a los miembros de la cuadrilla con su nombre', async () => {
+      miembroRepo.find
+        .mockResolvedValueOnce([{ cuadrilla_id: 3, usuario_id: 4, es_responsable: true }])
+        .mockResolvedValueOnce([
+          { cuadrilla_id: 3, usuario_id: 4, es_responsable: true },
+          { cuadrilla_id: 3, usuario_id: 9, es_responsable: false },
+        ]);
+      visitaRepo.findAndCount.mockResolvedValue([[], 0]);
+      usuarioRepo.find.mockResolvedValue([
+        { id: 4, nombre: 'Responsable' },
+        { id: 9, nombre: 'Técnico Demo Uno' },
+      ]);
+
+      const bandeja = await service.visitasDeCuadrillaResponsable(4);
+
+      expect(bandeja.miembros).toEqual([
+        expect.objectContaining({ usuario_id: 4, nombre: 'Responsable', es_responsable: true }),
+        expect.objectContaining({ usuario_id: 9, nombre: 'Técnico Demo Uno' }),
+      ]);
+    });
   });
 });

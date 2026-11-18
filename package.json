@@ -16,6 +16,8 @@
     "docker:down": "docker compose -f docker/dev/docker-compose.infra.yml down",
     "docker:dev": "docker compose -f docker/dev/docker-compose.yml up",
     "docker:dev:build": "docker compose -f docker/dev/docker-compose.yml up --build",
+    "dev:prediccion": "docker compose -f docker/dev/docker-compose.prediccion.yml up --build",
+    "dev:prediccion:entrenar": "docker compose -f docker/dev/docker-compose.prediccion.yml run --rm ms-prediccion python -m app.entrenar_cli",
     "lint:backend": "eslint \"backend/**/*.ts\" \"libs/**/*.ts\" --ext .ts",
     "lint:frontend": "pnpm -r --filter \"./frontend/**\" lint",
     "lint": "pnpm run lint:backend && pnpm run lint:frontend",

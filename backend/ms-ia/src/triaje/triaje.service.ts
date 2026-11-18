@@ -70,7 +70,9 @@ export class TriajeService {
 
     const temporada: Temporada = TEMPORADAS.includes(dto.temporada_forzada as Temporada)
       ? (dto.temporada_forzada as Temporada)
-      : temporadaDeFecha(new Date());
+      : // La temporada es la del momento del reporte, no la del día en que se triagea:
+        // un canal obstruido reportado en julio se evalúa como época seca.
+        temporadaDeFecha(new Date(dto.creado_en));
 
     const hechos = {
       tipo: tipoDesdeCategoria(categoriaId),

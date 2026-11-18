@@ -1,5 +1,7 @@
 import {
+  HttpException,
   InternalServerErrorException,
+  ForbiddenException,
   ConflictException,
   UnauthorizedException,
   NotFoundException,
@@ -20,8 +22,15 @@ export async function sendRpc<T>(source: Observable<T>): Promise<T> {
 
   if (result && typeof result === 'object' && result.status === 'error') {
     const msg = result.message ?? 'Error interno';
+    // Si el microservicio informó el código HTTP, se respeta. La heurística por
+    // texto de abajo queda solo para errores que no son HttpException (TD-04).
+    const codigo = result.statusCode;
+    if (typeof codigo === 'number' && codigo >= 400 && codigo < 600) {
+      throw new HttpException(msg, codigo);
+    }
     if (msg.includes('ya esta registrado') || msg.includes('ya existe'))
       throw new ConflictException(msg);
+    if (msg.includes('bloqueado')) throw new ForbiddenException(msg);
     if (
       msg.includes('Credenciales invalidas') ||
       msg.includes('invalido') ||

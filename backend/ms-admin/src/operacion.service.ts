@@ -18,11 +18,21 @@ import {
   Reporte,
   ROLES,
   PropuestaVisita,
+  Usuario,
   UsuarioRol,
   VisitaCaso,
   puedeTransicionarCaso,
 } from '@ojo-camba/common';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import * as crypto from 'crypto';
 import { In, IsNull, Repository } from 'typeorm';
+
+/** Estados que el técnico propone y otra persona debe confirmar o descartar. */
+const ESTADOS_TERMINALES_PROPUESTOS = [
+  EstadoCaso.Finalizado,
+  EstadoCaso.Derivado,
+  EstadoCaso.RechazadoCampo,
+];
 
 export const UMBRALES_OPERATIVOS = {
   VISITAS_META_DIARIA: 'visitas_meta_diaria',
@@ -50,6 +60,17 @@ const CONFIGURACION_INICIAL = [
 
 @Injectable()
 export class OperacionService implements OnModuleInit {
+  private readonly bucket = process.env.S3_BUCKET ?? 'reportes';
+  private readonly s3 = new S3Client({
+    endpoint: process.env.S3_ENDPOINT ?? 'http://localhost:9000',
+    region: 'us-east-1',
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY ?? 'ojocamba',
+      secretAccessKey: process.env.S3_SECRET_KEY ?? 'ojocamba_secret',
+    },
+    forcePathStyle: true,
+  });
+
   constructor(
     @InjectRepository(CuadrillaMiembro)
     private readonly miembroRepo: Repository<CuadrillaMiembro>,
@@ -150,7 +171,25 @@ export class OperacionService implements OnModuleInit {
       total,
       page: pagina,
       limit: limite,
+      // La pantalla de reparto necesita a quién puede asignar cada visita.
+      miembros: await this.miembrosConNombre(cuadrillaIds),
     };
+  }
+
+  private async miembrosConNombre(cuadrillaIds: number[]) {
+    if (cuadrillaIds.length === 0) return [];
+    const miembros = await this.miembroRepo.find({ where: { cuadrilla_id: In(cuadrillaIds) } });
+    if (miembros.length === 0) return [];
+    const usuarios = await this.usuarioRolRepo.manager.getRepository(Usuario).find({
+      where: { id: In(miembros.map((miembro) => miembro.usuario_id)) },
+    });
+    const nombres = new Map(usuarios.map((usuario) => [usuario.id, usuario.nombre]));
+    return miembros.map((miembro) => ({
+      cuadrilla_id: miembro.cuadrilla_id,
+      usuario_id: miembro.usuario_id,
+      nombre: nombres.get(miembro.usuario_id) ?? `Usuario ${miembro.usuario_id}`,
+      es_responsable: miembro.es_responsable,
+    }));
   }
 
   async actualizarConfiguracion(clave: string, valor: number, usuarioId: number) {
@@ -299,6 +338,18 @@ export class OperacionService implements OnModuleInit {
     visita.orden_ruta = dto.orden_ruta;
     const guardada = await this.visitaRepo.save(visita);
 
+    // Un caso reencolado vuelve a quedar planificado cuando su nueva visita
+    // tiene técnico y fecha.
+    const grupo = await this.grupoRepo.findOne({ where: { id: visita.grupo_id } });
+    if (grupo?.estado_actual === EstadoCaso.Reencolado) {
+      await this.cambiarEstadoCaso(
+        grupo,
+        EstadoCaso.PlanificadoVisita,
+        dto.responsable_id,
+        'Caso reencolado vuelto a planificar.',
+      );
+    }
+
     await this.actualizacionRepo.save(
       this.actualizacionRepo.create({
         grupo_id: visita.grupo_id,
@@ -327,6 +378,9 @@ export class OperacionService implements OnModuleInit {
     if (visita.tecnico_id !== dto.tecnico_id) {
       throw new ForbiddenException('Solo el técnico asignado puede registrar la llegada.');
     }
+    if (visita.llegada_en) {
+      throw new BadRequestException('La llegada de esta visita ya está registrada.');
+    }
 
     visita.llegada_en = new Date();
     visita.lat_llegada = dto.lat;
@@ -343,7 +397,66 @@ export class OperacionService implements OnModuleInit {
         lng_actualizada: dto.lng,
       }),
     );
+
+    // Al llegar empieza la validación en campo. Si el caso ya está EnTrabajo
+    // (visita de seguimiento de la obra), el estado no cambia.
+    const grupo = await this.grupoRepo.findOne({ where: { id: visita.grupo_id } });
+    if (grupo?.estado_actual === EstadoCaso.PlanificadoVisita) {
+      await this.cambiarEstadoCaso(
+        grupo,
+        EstadoCaso.ValidacionCampo,
+        dto.tecnico_id,
+        'Validación en campo iniciada.',
+      );
+    }
     return guardada;
+  }
+
+  /** Cambia el estado del caso solo por una transición legal y lo deja en la bitácora. */
+  private async cambiarEstadoCaso(
+    grupo: GrupoReporte,
+    nuevo: EstadoCaso,
+    usuarioId: number,
+    comentario: string,
+  ) {
+    const anterior = grupo.estado_actual as EstadoCaso;
+    if (!puedeTransicionarCaso(anterior, nuevo)) {
+      throw new BadRequestException(`El caso no puede pasar de ${anterior} a ${nuevo}.`);
+    }
+    grupo.estado_actual = nuevo;
+    await this.grupoRepo.save(grupo);
+    await this.actualizacionRepo.save(
+      this.actualizacionRepo.create({
+        grupo_id: grupo.id,
+        usuario_id: usuarioId,
+        comentario,
+        estado_anterior: anterior,
+        estado_nuevo: nuevo,
+      }),
+    );
+  }
+
+  /**
+   * La evidencia llega como data URL desde la cámara del técnico. Se sube a S3
+   * y se guarda solo la clave, como las fotos de reportes y de la bitácora.
+   * Una URL o clave ya existente se conserva tal cual.
+   */
+  private async guardarEvidencia(valor?: string | null): Promise<string | null> {
+    const texto = valor?.trim();
+    if (!texto) return null;
+    const match = texto.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!match) return texto;
+    const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+    const key = `evidencias/${crypto.randomUUID()}.${ext}`;
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: Buffer.from(match[2], 'base64'),
+        ContentType: `image/${ext}`,
+      }),
+    );
+    return key;
   }
 
   /**
@@ -396,6 +509,15 @@ export class OperacionService implements OnModuleInit {
     if (visita.tecnico_id !== dto.tecnico_id) {
       throw new ForbiddenException('Solo el técnico asignado puede proponer el resultado.');
     }
+    if (!visita.llegada_en) {
+      throw new BadRequestException('Registra la llegada antes de proponer un resultado.');
+    }
+    const pendiente = await this.propuestaRepo.findOne({
+      where: { visita_id: visita.id, decision: DecisionPropuestaVisita.Pendiente },
+    });
+    if (pendiente) {
+      throw new BadRequestException('Esta visita ya tiene una propuesta esperando decisión.');
+    }
     if (!dto.comentario.trim())
       throw new BadRequestException('La propuesta requiere una descripción.');
 
@@ -423,6 +545,7 @@ export class OperacionService implements OnModuleInit {
     if (dto.estado_propuesto === EstadoCaso.RechazadoCampo && !dto.categoria_rechazo_id) {
       throw new BadRequestException('El rechazo de campo requiere una categoría.');
     }
+    const evidencia = await this.guardarEvidencia(dto.evidencia_url);
 
     // EnTrabajo y Reencolado no son decisiones terminales: el técnico las
     // registra directamente después de la visita. Las demás quedan pendientes
@@ -448,7 +571,24 @@ export class OperacionService implements OnModuleInit {
           comentario: `Resultado de visita: ${dto.estado_propuesto}. ${dto.comentario.trim()}`,
           estado_anterior: estadoActual,
           estado_nuevo: dto.estado_propuesto,
-          url_imagen: dto.evidencia_url?.trim() || null,
+          url_imagen: evidencia,
+        }),
+      );
+      // El caso sigue vivo: hace falta otra visita. EnTrabajo la deja al mismo
+      // técnico (seguimiento de la obra); Reencolado vuelve a la bandeja del
+      // responsable sin técnico, para que la redistribuya.
+      await this.visitaRepo.save(
+        this.visitaRepo.create({
+          grupo_id: visita.grupo_id,
+          cuadrilla_id: visita.cuadrilla_id,
+          tecnico_id: dto.estado_propuesto === EstadoCaso.EnTrabajo ? visita.tecnico_id : null,
+          asignado_por_usuario_id: null,
+          fecha_planificada: null,
+          orden_ruta: null,
+          llegada_en: null,
+          lat_llegada: null,
+          lng_llegada: null,
+          cerrada_en: null,
         }),
       );
       return { requiere_confirmacion: false, estado_actual: dto.estado_propuesto };
@@ -461,7 +601,7 @@ export class OperacionService implements OnModuleInit {
         comentario: dto.comentario.trim(),
         entidad_destino: dto.entidad_destino?.trim() || null,
         categoria_rechazo_id: dto.categoria_rechazo_id ?? null,
-        evidencia_url: dto.evidencia_url?.trim() || null,
+        evidencia_url: evidencia,
         propuesto_por_usuario_id: dto.tecnico_id,
         decision: DecisionPropuestaVisita.Pendiente,
         decidido_por_usuario_id: null,
@@ -500,32 +640,10 @@ export class OperacionService implements OnModuleInit {
     if (!visita || visita.cerrada_en) throw new NotFoundException('Visita abierta no encontrada.');
     const grupo = await this.grupoRepo.findOne({ where: { id: visita.grupo_id } });
     if (!grupo) throw new NotFoundException('Caso de Obra no encontrado.');
-    if (
-      ![EstadoCaso.Finalizado, EstadoCaso.Derivado, EstadoCaso.RechazadoCampo].includes(
-        propuesta.estado_propuesto,
-      )
-    ) {
+    if (!ESTADOS_TERMINALES_PROPUESTOS.includes(propuesta.estado_propuesto)) {
       throw new BadRequestException('Solo se confirman propuestas terminales.');
     }
-
-    if (propuesta.estado_propuesto === EstadoCaso.RechazadoCampo) {
-      const roles = await this.usuarioRolRepo.find({
-        where: { usuario_id: dto.usuario_id },
-        relations: ['rol'],
-      });
-      if (!roles.some((relacion) => relacion.rol.nombre === ROLES.COORDINADOR_OPERATIVO)) {
-        throw new ForbiddenException('Solo el coordinador operativo confirma rechazos de campo.');
-      }
-    } else {
-      const miembro = await this.miembroRepo.findOne({
-        where: { cuadrilla_id: visita.cuadrilla_id, usuario_id: dto.usuario_id },
-      });
-      if (!miembro?.es_responsable) {
-        throw new ForbiddenException(
-          'Solo el responsable de esta cuadrilla confirma esta propuesta.',
-        );
-      }
-    }
+    await this.verificarAutoridadSobrePropuesta(propuesta, visita, dto.usuario_id);
 
     const estadoActual = grupo.estado_actual as EstadoCaso;
     if (!puedeTransicionarCaso(estadoActual, propuesta.estado_propuesto)) {
@@ -582,6 +700,128 @@ export class OperacionService implements OnModuleInit {
       }),
     );
     return propuesta;
+  }
+
+  /**
+   * Finalizado y Derivado los decide el responsable de la cuadrilla;
+   * RechazadoCampo, el coordinador operativo.
+   */
+  private async verificarAutoridadSobrePropuesta(
+    propuesta: PropuestaVisita,
+    visita: VisitaCaso,
+    usuarioId: number,
+  ) {
+    if (propuesta.estado_propuesto === EstadoCaso.RechazadoCampo) {
+      const roles = await this.usuarioRolRepo.find({
+        where: { usuario_id: usuarioId },
+        relations: ['rol'],
+      });
+      if (!roles.some((relacion) => relacion.rol.nombre === ROLES.COORDINADOR_OPERATIVO)) {
+        throw new ForbiddenException('Solo el coordinador operativo decide rechazos de campo.');
+      }
+      return;
+    }
+    const miembro = await this.miembroRepo.findOne({
+      where: { cuadrilla_id: visita.cuadrilla_id, usuario_id: usuarioId },
+    });
+    if (!miembro?.es_responsable) {
+      throw new ForbiddenException('Solo el responsable de esta cuadrilla decide esta propuesta.');
+    }
+  }
+
+  /**
+   * Descartar devuelve la visita al técnico: sigue abierta y puede proponer
+   * otro resultado. El motivo es obligatorio porque queda en la bitácora.
+   */
+  async descartarPropuestaVisita(dto: {
+    propuesta_id: number;
+    usuario_id: number;
+    motivo_decision?: string;
+  }) {
+    const motivo = dto.motivo_decision?.trim();
+    if (!motivo) throw new BadRequestException('Indica por qué se descarta la propuesta.');
+    const propuesta = await this.propuestaRepo.findOne({ where: { id: dto.propuesta_id } });
+    if (!propuesta) throw new NotFoundException('Propuesta de visita no encontrada.');
+    if (propuesta.decision !== DecisionPropuestaVisita.Pendiente) {
+      throw new BadRequestException('La propuesta ya fue resuelta.');
+    }
+    const visita = await this.visitaRepo.findOne({ where: { id: propuesta.visita_id } });
+    if (!visita || visita.cerrada_en) throw new NotFoundException('Visita abierta no encontrada.');
+    await this.verificarAutoridadSobrePropuesta(propuesta, visita, dto.usuario_id);
+
+    propuesta.decision = DecisionPropuestaVisita.Descartada;
+    propuesta.decidido_por_usuario_id = dto.usuario_id;
+    propuesta.motivo_decision = motivo;
+    propuesta.decidida_en = new Date();
+    await this.propuestaRepo.save(propuesta);
+    await this.actualizacionRepo.save(
+      this.actualizacionRepo.create({
+        grupo_id: visita.grupo_id,
+        usuario_id: dto.usuario_id,
+        comentario: 'Propuesta de ' + propuesta.estado_propuesto + ' descartada: ' + motivo,
+        estado_anterior: null,
+        estado_nuevo: null,
+      }),
+    );
+    return propuesta;
+  }
+
+  /**
+   * Propuestas que esperan una decisión. "cuadrilla": Finalizado y Derivado de
+   * las cuadrillas que el usuario lidera. "coordinacion": rechazos de campo.
+   */
+  async propuestasPendientes(dto: { usuario_id: number; alcance: 'cuadrilla' | 'coordinacion' }) {
+    let visitaIds: number[] | null = null;
+    if (dto.alcance === 'cuadrilla') {
+      const lideradas = await this.miembroRepo.find({
+        where: { usuario_id: dto.usuario_id, es_responsable: true },
+      });
+      if (lideradas.length === 0) return [];
+      const abiertas = await this.visitaRepo.find({
+        where: {
+          cuadrilla_id: In(lideradas.map((miembro) => miembro.cuadrilla_id)),
+          cerrada_en: IsNull(),
+        },
+      });
+      visitaIds = abiertas.map((visita) => visita.id);
+      if (visitaIds.length === 0) return [];
+    }
+    const estados =
+      dto.alcance === 'cuadrilla'
+        ? [EstadoCaso.Finalizado, EstadoCaso.Derivado]
+        : [EstadoCaso.RechazadoCampo];
+    const propuestas = await this.propuestaRepo.find({
+      where: {
+        decision: DecisionPropuestaVisita.Pendiente,
+        estado_propuesto: In(estados),
+        ...(visitaIds ? { visita_id: In(visitaIds) } : {}),
+      },
+      order: { creado_en: 'ASC' },
+    });
+    if (propuestas.length === 0) return [];
+
+    const visitas = await this.visitaRepo.find({
+      where: { id: In(propuestas.map((propuesta) => propuesta.visita_id)) },
+    });
+    const porVisita = new Map(visitas.map((visita) => [visita.id, visita]));
+    const grupos = await this.grupoRepo.find({
+      where: { id: In(visitas.map((visita) => visita.grupo_id)) },
+    });
+    const porGrupo = new Map(grupos.map((grupo) => [grupo.id, grupo]));
+    const usuarios = await this.usuarioRolRepo.manager.getRepository(Usuario).find({
+      where: { id: In(propuestas.map((propuesta) => propuesta.propuesto_por_usuario_id)) },
+    });
+    const nombres = new Map(usuarios.map((usuario) => [usuario.id, usuario.nombre]));
+
+    return propuestas.map((propuesta) => {
+      const visita = porVisita.get(propuesta.visita_id);
+      return {
+        ...propuesta,
+        tecnico_nombre: nombres.get(propuesta.propuesto_por_usuario_id) ?? null,
+        visita: visita ?? null,
+        caso: visita ? (porGrupo.get(visita.grupo_id) ?? null) : null,
+      };
+    });
   }
 
   async registrarDerivacion(dto: {

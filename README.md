@@ -10,7 +10,7 @@ Monorepo pnpm con microservicios NestJS comunicados por TCP y frontends React PW
 backend/          NestJS — 2 API Gateways + 4 Microservicios TCP
 frontend/         React PWA — 4 aplicaciones cliente
 libs/common/      Tipos TypeScript compartidos (enums, patrones TCP)
-docker/dev/       Stack de desarrollo (PostgreSQL+PostGIS, MinIO, servicios)
+docker/dev/       Stack de desarrollo (PostgreSQL+PostGIS, SeaweedFS, servicios)
 docker/prod/      Stack de producción (multi-stage builds)
 ```
 

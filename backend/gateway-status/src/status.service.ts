@@ -2,7 +2,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientProxy } from '@nestjs/microservices';
 import { Interval } from '@nestjs/schedule';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { firstValueFrom, timeout } from 'rxjs';
 import { TCP_PATTERNS, PingLog } from '@ojo-camba/common';
 
@@ -32,6 +32,15 @@ export interface ServiceHistory {
 const DIAS_HISTORIAL_DEFAULT = 30;
 const DIAS_HISTORIAL_MAX = 90;
 
+/**
+ * Días de ping_log que se conservan (PING_LOG_RETENCION_DIAS). Nunca menos que
+ * el historial que muestra la App Status, para no vaciarle sus barras de uptime.
+ */
+export function diasRetencionPingLog(env: NodeJS.ProcessEnv = process.env): number {
+  const valor = parseInt(env.PING_LOG_RETENCION_DIAS ?? '', 10);
+  return Number.isInteger(valor) && valor > DIAS_HISTORIAL_MAX ? valor : DIAS_HISTORIAL_MAX;
+}
+
 @Injectable()
 export class StatusService {
   private readonly logger = new Logger(StatusService.name);
@@ -51,6 +60,27 @@ export class StatusService {
   @Interval(60000)
   private autoPing() {
     this.pingAll();
+  }
+
+  /**
+   * Cada ping agrega una fila por servicio cada minuto y nada las borraba: la
+   * tabla crecía sin límite. Cada 6 horas se borra lo que pasó la retención.
+   */
+  @Interval(6 * 60 * 60 * 1000)
+  async purgarHistorialAntiguo(ahora = new Date()): Promise<number> {
+    const limite = new Date(ahora.getTime() - diasRetencionPingLog() * 24 * 60 * 60 * 1000);
+    try {
+      const resultado = await this.pingLogRepo.delete({ creado_en: LessThan(limite) });
+      const borradas = resultado.affected ?? 0;
+      if (borradas > 0)
+        this.logger.log(
+          `ping_log: ${borradas} filas anteriores a ${limite.toISOString()} borradas`,
+        );
+      return borradas;
+    } catch (err) {
+      this.logger.warn(`No se pudo purgar ping_log: ${(err as Error).message}`);
+      return 0;
+    }
   }
 
   getStatus(): StatusResult {

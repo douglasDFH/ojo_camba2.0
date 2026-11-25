@@ -1,0 +1,15 @@
+stateDiagram-v2
+    direction TB
+    [*] --> PendienteAsignacion: se crea el Caso de Obra
+    PendienteAsignacion --> PlanificadoVisita: se asigna cuadrilla y visita
+    PlanificadoVisita --> ValidacionCampo: el técnico registra su llegada
+    ValidacionCampo --> EnTrabajo: la obra empieza
+    ValidacionCampo --> Reencolado: no se pudo trabajar
+    ValidacionCampo --> Derivado: otra entidad (confirma el responsable)
+    ValidacionCampo --> RechazadoCampo: nada que atender (confirma coordinación)
+    Reencolado --> PlanificadoVisita: se reprograma
+    EnTrabajo --> PlanificadoVisita: visita de seguimiento
+    EnTrabajo --> Finalizado: obra terminada (con evidencia)
+    Derivado --> [*]
+    RechazadoCampo --> [*]
+    Finalizado --> [*]

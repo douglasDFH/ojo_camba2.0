@@ -1,0 +1,12 @@
+flowchart TB
+    subgraph F1[" "]
+        direction LR
+        A["1. Ciudadano<br/>reporta con foto y GPS"] --> B["2. Backoffice<br/>acepta o descarta"] --> C["3. Caso de Obra<br/>agrupa reportes cercanos"] --> D["4. Coordinación<br/>asigna cuadrilla"]
+    end
+    subgraph F2[" "]
+        direction LR
+        E["5. Responsable<br/>distribuye la visita"] --> F["6. Técnico<br/>llega y propone resultado"] --> G["7. Autoridad<br/>confirma el cierre"] --> H["8. Bitácora pública<br/>y panel de decisión"]
+    end
+    D --> E
+    style F1 fill:none,stroke:none
+    style F2 fill:none,stroke:none

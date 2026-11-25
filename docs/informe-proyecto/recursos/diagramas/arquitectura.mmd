@@ -1,0 +1,45 @@
+flowchart LR
+    subgraph Clientes["Aplicaciones web progresivas (React)"]
+        R["app-reporte<br/>Ciudadano"]
+        B["app-backoffice<br/>Backoffice, coordinación, IT, autoridad"]
+        T["app-tecnico<br/>Técnicos y responsables de cuadrilla"]
+        S["app-status<br/>Público"]
+    end
+
+    subgraph Gateways["Gateways HTTP"]
+        GP["gateway-principal<br/>:3000 · JWT y roles"]
+        GS["gateway-status<br/>:3005 · ping cada 60 s"]
+    end
+
+    subgraph Micro["Microservicios"]
+        AU["ms-auth :3001<br/>usuarios, roles, tokens"]
+        RE["ms-register :3002<br/>reportes, H3, imágenes"]
+        AD["ms-admin :3003<br/>casos, cuadrillas, visitas"]
+        GA["ms-gamify :3004<br/>puntos y niveles"]
+        IA["ms-ia :3006<br/>triaje, recomendación, asistente"]
+        PR["ms-prediccion :3007<br/>Python · pronóstico"]
+    end
+
+    subgraph Datos["Almacenamiento"]
+        DB[("PostgreSQL 16<br/>PostGIS + h3-pg")]
+        S3[("SeaweedFS<br/>compatible S3")]
+    end
+
+    R --> GP
+    B --> GP
+    T --> GP
+    S --> GS
+    GP -. TCP .-> AU
+    GP -. TCP .-> RE
+    GP -. TCP .-> AD
+    GP -. TCP .-> GA
+    GP -. TCP .-> IA
+    GP -- HTTP interno --> PR
+    GS -. ping TCP .-> Micro
+    RE --> S3
+    AU --> DB
+    RE --> DB
+    AD --> DB
+    GA --> DB
+    IA --> DB
+    PR -- lectura --> DB

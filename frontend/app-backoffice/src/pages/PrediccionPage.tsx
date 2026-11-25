@@ -169,7 +169,10 @@ export default function PrediccionPage() {
       // Se piden todas, no solo las criticas: el filtro de capacidad necesita
       // el riesgo de las zonas tranquilas, que no generan alerta.
       // La autoridad municipal no puede pedirlas: el gateway responde 403.
-      esCoordinador ? getAlertas(false) : Promise.resolve(null),
+      // Sin modelo (409) o sin historia (422) no hay alertas, pero lo observado
+      // se muestra igual: si fallaran juntas, Promise.all tiraria la comparativa
+      // y el panel quedaria en "Error del servidor" en un despliegue nuevo.
+      esCoordinador ? getAlertas(false).catch(() => null) : Promise.resolve(null),
       cargarHistorial(),
     ];
 

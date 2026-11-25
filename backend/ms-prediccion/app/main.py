@@ -112,6 +112,10 @@ def alertas(solo_criticas: bool = Query(default=True)):
         datos = _pronosticador.pronosticar(_engine, _clima_cacheado())
     except ModeloNoEntrenado as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
+    except ValueError as error:
+        # Mismo contrato que /pronostico: sin historia suficiente es un estado
+        # esperado (base nueva), no un fallo del servicio.
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
     umbrales = leer_umbrales(
         _engine,

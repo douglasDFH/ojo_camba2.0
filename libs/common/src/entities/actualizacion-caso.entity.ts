@@ -1,4 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  type Relation,
+} from 'typeorm';
+import type { GrupoReporte } from './grupo-reporte.entity';
+import type { Usuario } from './usuario.entity';
 
 // Acelera getCasosPorEstadoHistorico() (Dashboard): busca, por grupo_id, la
 // ultima fila con estado_nuevo antes de una fecha dada — sin este indice,
@@ -41,4 +52,15 @@ export class ActualizacionCaso {
 
   @CreateDateColumn({ type: 'timestamptz' })
   creado_en: Date;
+
+  @ManyToOne('GrupoReporte', { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'grupo_id', foreignKeyConstraintName: 'FK_actualizaciones_caso_grupo_id' })
+  grupo?: Relation<GrupoReporte>;
+
+  @ManyToOne('Usuario', { onDelete: 'RESTRICT' })
+  @JoinColumn({
+    name: 'usuario_id',
+    foreignKeyConstraintName: 'FK_actualizaciones_caso_usuario_id',
+  })
+  usuario?: Relation<Usuario>;
 }

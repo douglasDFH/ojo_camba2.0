@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ENTIDADES } from '@ojo-camba/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminModule } from './admin.module';
 
@@ -12,6 +13,7 @@ import { AdminModule } from './admin.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
+        entities: ENTIDADES,
         autoLoadEntities: true,
         synchronize: false,
         logging: ['error'],

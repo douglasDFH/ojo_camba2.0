@@ -1,8 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  type Relation,
+} from 'typeorm';
+import type { GrupoReporte } from './grupo-reporte.entity';
 
 /** Evidencia auditable de una derivación confirmada en campo. */
 @Entity('derivaciones_caso')
-@Index(['grupo_id', 'creado_en'])
+@Index('IDX_derivaciones_caso_grupo_creado', ['grupo_id', 'creado_en'])
 export class DerivacionCaso {
   @PrimaryGeneratedColumn()
   id: number;
@@ -24,4 +34,8 @@ export class DerivacionCaso {
 
   @CreateDateColumn({ type: 'timestamptz' })
   creado_en: Date;
+
+  @ManyToOne('GrupoReporte', { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'grupo_id', foreignKeyConstraintName: 'FK_derivaciones_caso_grupo_id' })
+  grupo?: Relation<GrupoReporte>;
 }

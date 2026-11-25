@@ -76,7 +76,10 @@ async function prepararVisitaAsignada() {
   expect(pendientes.ok()).toBeTruthy();
   const visita = (await pendientes.json()).data.find((item: { grupo_id: number }) => item.grupo_id === grupo.id);
   expect(visita).toBeTruthy();
-  const fecha = new Date().toISOString().slice(0, 10);
+  // Hoy en la zona del navegador (timezoneId de playwright.config), igual que
+  // hoyLocal() en app-tecnico. toISOString() da la fecha UTC: desde las 20:00
+  // en Bolivia ya es mañana y la parada no aparece en "Mi ruta".
+  const fecha = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/La_Paz' }).format(new Date());
   const distribucion = await api.put(`/operacion/mi-cuadrilla/visitas/${visita.id}/asignacion`, {
     headers: { Authorization: `Bearer ${responsable.access_token}` },
     data: { tecnico_id: tecnico.user.id, fecha_planificada: fecha, orden_ruta: 1 },
@@ -105,9 +108,12 @@ test.describe('App técnica: recorrido asignado (ISSUE-29)', () => {
     await page.getByRole('link', { name: new RegExp(visita.codigoObra) }).click();
     await expect(page.getByText('2 reportes ciudadanos agrupados')).toBeVisible();
     await page.getByRole('button', { name: 'Registrar llegada' }).click();
-    await expect(page.getByRole('button', { name: 'Llegada registrada' })).toBeVisible({
+    // Con la llegada registrada el botón desaparece y se habilitan la bitácora
+    // y el resultado de la visita (DetalleVisitaPage, flujo de campo #2).
+    await expect(page.getByRole('heading', { name: 'Resultado de la visita' })).toBeVisible({
       timeout: 10_000,
     });
+    await expect(page.getByRole('button', { name: 'Registrar llegada' })).toHaveCount(0);
 
     const api = await playwrightRequest.newContext({ baseURL: API_URL });
     const tecnico = await loginApi(api, TECNICO);

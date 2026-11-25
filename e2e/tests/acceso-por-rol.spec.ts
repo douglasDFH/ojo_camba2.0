@@ -39,7 +39,7 @@ const PERFILES: Perfil[] = [
     email: 'coordinador@ojocamba.bo',
     password: 'coord123',
     areaInicial: '/casos',
-    menu: ['Panel estrategico', 'Panel de decision', 'Casos'],
+    menu: ['Panel estrategico', 'Panel de decision', 'Casos', 'Rechazos de campo'],
     rutaProhibida: '/revisar',
   },
   {

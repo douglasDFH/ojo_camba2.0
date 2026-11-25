@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ENTIDADES } from '@ojo-camba/common';
 import { IaModule } from './ia.module';
 
 @Module({
@@ -13,6 +14,7 @@ import { IaModule } from './ia.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres' as const,
         url: configService.get<string>('DATABASE_URL'),
+        entities: ENTIDADES,
         autoLoadEntities: true,
         synchronize: false,
         logging: ['error'],

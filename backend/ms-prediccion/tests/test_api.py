@@ -130,6 +130,26 @@ def test_sin_modelo_responde_409_y_dice_como_entrenar(sin_modelo, ruta):
     assert "entrenar" in respuesta.json()["detail"].lower()
 
 
+class PronosticadorSinHistoria(PronosticadorFalso):
+    """Modelo entrenado, pero la base todavia no tiene semanas para pronosticar."""
+
+    def pronosticar(self, engine, clima=None):
+        raise ValueError("No hay historia suficiente para pronosticar.")
+
+
+@pytest.mark.parametrize("ruta", ["/pronostico", "/alertas"])
+def test_sin_historia_responde_422_y_no_500(monkeypatch, ruta):
+    """
+    Una base nueva sin historia es un estado esperado, igual que no tener
+    modelo. Antes /alertas lo dejaba escapar como 500 y el Panel de decision
+    mostraba "Error del servidor".
+    """
+    api = cliente(PronosticadorSinHistoria(_pronostico([])), monkeypatch)
+    respuesta = api.get(ruta)
+    assert respuesta.status_code == 422
+    assert "historia" in respuesta.json()["detail"].lower()
+
+
 def test_el_pronostico_se_declara_como_estimacion(con_modelo):
     """
     ISSUE-32 exige no mezclar observado con estimado. El campo `origen` y la

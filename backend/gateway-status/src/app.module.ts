@@ -3,7 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PingLog } from '@ojo-camba/common';
+import { ENTIDADES, PingLog } from '@ojo-camba/common';
 import { StatusController } from './status.controller';
 import { StatusService } from './status.service';
 
@@ -16,6 +16,7 @@ import { StatusService } from './status.service';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
+        entities: ENTIDADES,
         autoLoadEntities: true,
         synchronize: false,
         logging: ['error'],

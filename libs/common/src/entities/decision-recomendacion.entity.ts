@@ -24,8 +24,8 @@ export enum AccionRecomendacion {
  * el error del pronóstico sin guardar una tabla aparte de snapshots.
  */
 @Entity('decisiones_recomendacion')
-@Index(['zona_h3', 'periodo_desde'])
-@Index(['decidido_por_usuario_id', 'creado_en'])
+@Index('IDX_decisiones_zona_periodo', ['zona_h3', 'periodo_desde'])
+@Index('IDX_decisiones_usuario_creado', ['decidido_por_usuario_id', 'creado_en'])
 export class DecisionRecomendacion {
   @PrimaryGeneratedColumn()
   id: number;
@@ -55,7 +55,9 @@ export class DecisionRecomendacion {
   @Column({ type: 'text' })
   recomendacion_original: string;
 
-  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
+  // TypeORM lee el default sin el cast ::jsonb; declararlo igual evita un ALTER
+  // falso en migration:generate. PostgreSQL castea el literal solo.
+  @Column({ type: 'jsonb', default: () => "'[]'" })
   factores: string[];
 
   @Column({ type: 'decimal', precision: 10, scale: 3 })

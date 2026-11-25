@@ -1,7 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 /** Detalle inmutable de los roles que una solicitud TI modificó por persona. */
 @Entity('solicitud_ti_usuarios')
+@Index('IDX_solicitud_ti_usuarios_solicitud', ['solicitud_id'])
 export class SolicitudTiUsuario {
   @PrimaryGeneratedColumn()
   id: number;

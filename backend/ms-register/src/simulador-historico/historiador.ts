@@ -1,12 +1,5 @@
 import { DataSource } from 'typeorm';
-import {
-  ActualizacionCaso,
-  Categoria,
-  DerivacionCaso,
-  Dispositivo,
-  GrupoReporte,
-  Reporte,
-} from '@ojo-camba/common';
+import { Categoria, ENTIDADES } from '@ojo-camba/common';
 
 export interface EventosDelDia {
   reportes: number[];
@@ -30,7 +23,7 @@ export class Historiador {
     this.dataSource = new DataSource({
       type: 'postgres',
       url: databaseUrl,
-      entities: [Reporte, GrupoReporte, ActualizacionCaso, DerivacionCaso, Categoria, Dispositivo],
+      entities: ENTIDADES,
       synchronize: false,
     });
   }

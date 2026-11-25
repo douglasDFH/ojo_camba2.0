@@ -1,4 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  type Relation,
+} from 'typeorm';
+import type { Reporte } from './reporte.entity';
+import type { Usuario } from './usuario.entity';
 
 @Entity('historial_puntos')
 export class HistorialPuntos {
@@ -20,4 +31,12 @@ export class HistorialPuntos {
 
   @CreateDateColumn({ type: 'timestamptz' })
   creado_en: Date;
+
+  @ManyToOne('Usuario', { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'usuario_id', foreignKeyConstraintName: 'FK_historial_puntos_usuario_id' })
+  usuario?: Relation<Usuario>;
+
+  @ManyToOne('Reporte', { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'report_id', foreignKeyConstraintName: 'FK_historial_puntos_report_id' })
+  reporte?: Relation<Reporte>;
 }

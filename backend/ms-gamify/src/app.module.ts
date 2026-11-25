@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ENTIDADES } from '@ojo-camba/common';
 import { ConfigModule } from '@nestjs/config';
 import { GamifyModule } from './gamify.module';
 
@@ -9,6 +10,7 @@ import { GamifyModule } from './gamify.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
+      entities: ENTIDADES,
       autoLoadEntities: true,
       synchronize: false,
       logging: ['error'],

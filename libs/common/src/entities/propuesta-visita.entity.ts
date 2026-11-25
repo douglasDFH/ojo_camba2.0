@@ -1,4 +1,14 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  type Relation,
+} from 'typeorm';
+import type { VisitaCaso } from './visita-caso.entity';
 import { EstadoCaso } from '../enums/estado-caso.enum';
 
 export enum DecisionPropuestaVisita {
@@ -9,8 +19,8 @@ export enum DecisionPropuestaVisita {
 
 /** Propuesta trazable del técnico, pendiente de la autoridad que corresponda. */
 @Entity('propuestas_visita')
-@Index(['visita_id', 'creado_en'])
-@Index(['decision', 'creado_en'])
+@Index('IDX_propuestas_visita_visita_creado', ['visita_id', 'creado_en'])
+@Index('IDX_propuestas_visita_decision_creado', ['decision', 'creado_en'])
 export class PropuestaVisita {
   @PrimaryGeneratedColumn()
   id: number;
@@ -50,4 +60,8 @@ export class PropuestaVisita {
 
   @CreateDateColumn({ type: 'timestamptz' })
   creado_en: Date;
+
+  @ManyToOne('VisitaCaso', { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'visita_id', foreignKeyConstraintName: 'FK_propuestas_visita_visita_id' })
+  visita?: Relation<VisitaCaso>;
 }

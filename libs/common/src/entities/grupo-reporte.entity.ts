@@ -1,7 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  type Relation,
+} from 'typeorm';
 import { EstadoCaso } from '../enums/estado-caso.enum';
+import type { Categoria } from './categoria.entity';
+import type { Cuadrilla } from './cuadrilla.entity';
+import type { Usuario } from './usuario.entity';
 
 @Entity('grupos_reportes')
+@Index('IDX_grupos_reportes_estado', ['estado_actual'])
+@Index('IDX_grupos_reportes_cuadrilla', ['cuadrilla_id'], { where: 'cuadrilla_id IS NOT NULL' })
 export class GrupoReporte {
   @PrimaryGeneratedColumn()
   id: number;
@@ -41,4 +55,19 @@ export class GrupoReporte {
 
   @CreateDateColumn({ type: 'timestamptz' })
   creado_en: Date;
+
+  @ManyToOne('Categoria', { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'categoria_id', foreignKeyConstraintName: 'FK_grupos_reportes_categoria_id' })
+  categoria?: Relation<Categoria>;
+
+  @ManyToOne('Cuadrilla', { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'cuadrilla_id', foreignKeyConstraintName: 'FK_grupos_reportes_cuadrilla_id' })
+  cuadrilla?: Relation<Cuadrilla>;
+
+  @ManyToOne('Usuario', { onDelete: 'RESTRICT' })
+  @JoinColumn({
+    name: 'creado_por_usuario_id',
+    foreignKeyConstraintName: 'FK_grupos_reportes_creado_por_usuario_id',
+  })
+  creado_por?: Relation<Usuario>;
 }

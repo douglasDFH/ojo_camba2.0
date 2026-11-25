@@ -1,7 +1,28 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  type Relation,
+} from 'typeorm';
 import { EstadoReporte, Gravedad } from '../enums/estado-reporte.enum';
+import type { Categoria } from './categoria.entity';
+import type { GrupoReporte } from './grupo-reporte.entity';
+import type { Usuario } from './usuario.entity';
 
+// Las llaves foráneas y los índices los crea la migración
+// IntegridadReferencialEIndices; se declaran aquí con el mismo nombre para que
+// migration:generate no los vea como sobrantes y los borre.
 @Entity('reportes')
+@Index('IDX_reportes_h3_res_8', ['h3_res_8'])
+@Index('IDX_reportes_h3_res_11', ['h3_res_11'])
+@Index('IDX_reportes_grupo', ['grupo_id'])
+@Index('IDX_reportes_estado_creado', ['estado', 'creado_en'])
+@Index('IDX_reportes_dispositivo_creado', ['device_id', 'creado_en'])
+@Index('IDX_reportes_usuario', ['usuario_id'])
 export class Reporte {
   @PrimaryGeneratedColumn()
   id: number;
@@ -61,4 +82,16 @@ export class Reporte {
 
   @CreateDateColumn({ type: 'timestamptz' })
   creado_en: Date;
+
+  @ManyToOne('Usuario', { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'usuario_id', foreignKeyConstraintName: 'FK_reportes_usuario_id' })
+  usuario?: Relation<Usuario>;
+
+  @ManyToOne('Categoria', { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'categoria_id', foreignKeyConstraintName: 'FK_reportes_categoria_id' })
+  categoria?: Relation<Categoria>;
+
+  @ManyToOne('GrupoReporte', { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'grupo_id', foreignKeyConstraintName: 'FK_reportes_grupo_id' })
+  grupo?: Relation<GrupoReporte>;
 }

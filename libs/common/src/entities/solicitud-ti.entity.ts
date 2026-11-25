@@ -1,10 +1,13 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * Solicitud administrativa presentada a TI para altas, cambios, bajas o
  * conformación de cuadrillas. Conserva el respaldo y al ejecutor del cambio.
  */
 @Entity('solicitudes_ti')
+// El índice es descendente ("creado_en" DESC) y TypeORM no sabe declararlo;
+// synchronize: false hace que migration:generate no lo toque.
+@Index('IDX_solicitudes_ti_creado', { synchronize: false })
 export class SolicitudTi {
   @PrimaryGeneratedColumn()
   id: number;

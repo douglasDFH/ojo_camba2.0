@@ -1,4 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Unique } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  JoinColumn,
+  ManyToOne,
+  Unique,
+  type Relation,
+} from 'typeorm';
+import type { Especialidad } from './especialidad.entity';
 
 /**
  * Equipo de campo que ejecuta los Casos de Obra. Una cuadrilla tiene una sola
@@ -29,4 +39,11 @@ export class Cuadrilla {
 
   @CreateDateColumn({ type: 'timestamptz' })
   creado_en: Date;
+
+  @ManyToOne('Especialidad', { onDelete: 'SET NULL' })
+  @JoinColumn({
+    name: 'especialidad_id',
+    foreignKeyConstraintName: 'FK_cuadrillas_especialidad_id',
+  })
+  especialidad?: Relation<Especialidad>;
 }

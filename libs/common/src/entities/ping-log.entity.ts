@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 
 
 @Entity('ping_log')
 @Index(['servicio', 'creado_en'])
+@Index('IDX_ping_log_creado', ['creado_en'])
 export class PingLog {
   @PrimaryGeneratedColumn()
   id: number;
